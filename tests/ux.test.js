@@ -12,16 +12,37 @@ test("una sola acción persistente para donar libros",()=>{
  assert.deepEqual(present,["top-add"]);
  assert.match(js,/\$\("#top-add"\)\.addEventListener/);
 });
-test("los filtros no están duplicados",()=>{
+test("solo queda un filtro de disponibilidad",()=>{
+ assert.doesNotMatch(html,/class="quick-filters"/);
  assert.doesNotMatch(html,/id="filter"/);
- assert.match(html,/data-filter="infantil"/);
- assert.match(html,/data-filter="adultos"/);
- assert.match(js,/state\.filter=b\.dataset\.filter/);
+ assert.match(html,/id="only-available"/);
+ assert.match(html,/Solo disponibles/);
+ assert.match(js,/state\.availableOnly/);
+ assert.match(js,/items\.some\(b=>b\.status==="available"\)/);
+});
+test("selector accesible de tarjetas y lista, con preferencia recordada",()=>{
+ assert.match(html,/id="view-cards"/);
+ assert.match(html,/id="view-list"/);
+ assert.match(html,/aria-pressed="true"/);
+ assert.match(js,/VIEW_STORAGE_KEY/);
+ assert.match(js,/localStorage\.setItem/);
+ assert.match(js,/booksEl\.classList\.toggle\("list-mode"/);
+ assert.match(css,/\.books-grid\.list-mode/);
+});
+test("portadas de ISBN con fallback si no existen",()=>{
+ assert.match(js,/covers\.openlibrary\.org\/b\/isbn\//);
+ assert.match(js,/book-cover-image/);
+ assert.match(js,/addEventListener\("error"/);
+ assert.match(js,/img\.hidden=true/);
+ assert.match(js,/coverHTML\(book\)/);
 });
 test("tres libros ejemplo, sin mezclarse con préstamos reales",()=>{
  for (const title of ["El monstruo de colores","¿A qué sabe la luna?","Matilda"])assert.ok(js.includes(title));
  assert.match(js,/no están registrados ni disponibles para préstamo/);
  assert.match(js,/<article class="book-card sample-card"/);
+ assert.match(js,/9788493987749/);
+ assert.match(js,/9788495123619/);
+ assert.match(js,/9789681903268/);
  assert.match(js,/if\(state\.books\.length===0\)/);
  assert.match(css,/\.books-grid\.demo-mode/);
 });
