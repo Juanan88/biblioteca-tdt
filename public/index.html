@@ -20,24 +20,33 @@
       </nav>
     </header>
     <main>
-      <section class="hero" aria-labelledby="welcome">
+      <section class="hero hero--compact" aria-labelledby="welcome">
         <div class="hero-copy">
-          <div class="eyebrow"><span class="dot"></span> UN RINCÓN PARA PEQUEÑOS LECTORES</div>
-          <h1 id="welcome">¡Aquí comienzan<br><em>grandes aventuras!</em></h1>
-          <p>Cuentos, animales, dinosaurios y mundos de fantasía. Descubre los libros de nuestros vecinos, llévate uno a casa y compártelo al terminar.</p>
-          <div class="hero-buttons">
-            <a class="button primary" href="#catalogo">Descubrir cuentos <span aria-hidden="true">↗</span></a>
+          <div class="eyebrow"><span class="dot"></span> NUESTRA BIBLIOTECA VECINAL</div>
+          <h1 id="welcome">¡Un cuento, <em>mil aventuras!</em></h1>
+          <p>Descubre los libros que compartimos entre vecinos. Elige uno, disfrútalo y devuélvelo a la estantería al terminar.</p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="circle"></div>
+          <div class="sparkle sparkle-a">✦</div>
+          <div class="sparkle sparkle-b">★</div>
+          <div class="book book-one"><span>✦</span></div>
+          <div class="book book-two"><span>⟡</span></div>
+          <div class="book book-three"><span>❋</span></div>
+        </div>
+      </section>
+      <section id="catalogo" class="catalogue catalogue--focused" aria-labelledby="catalogue-heading">
+        <div class="catalogue-head">
+          <div class="catalogue-title">
+            <span class="eyebrow">ELIGE TU PRÓXIMA AVENTURA</span>
+            <h2 id="catalogue-heading">Explora los libros 📚</h2>
+          </div>
+          <div class="stats stats-inline" aria-label="Estado de la biblioteca">
+            <div><strong id="count-all">—</strong><span>libros</span></div>
+            <div><strong id="count-free">—</strong><span>disponibles</span></div>
+            <div><strong id="count-borrowed">—</strong><span>prestados</span></div>
           </div>
         </div>
-        <div class="hero-art" aria-hidden="true"><div class="circle"></div><div class="sparkle sparkle-a">✦</div><div class="sparkle sparkle-b">★</div><div class="sparkle sparkle-c">✳</div><div class="book book-one"><span>✦</span></div><div class="book book-two"><span>⟡</span></div><div class="book book-three"><span>❋</span></div><div class="hero-quote">¡Cada libro es<br>una aventura!</div></div>
-      </section>
-      <section class="stats" aria-label="Estadísticas de la biblioteca">
-        <div><strong id="count-all">—</strong><span>Historias para compartir</span></div>
-        <div><strong id="count-free">—</strong><span>Disponibles ahora</span></div>
-        <div><strong id="count-borrowed">—</strong><span>Prestados entre vecinos</span></div>
-      </section>
-      <section id="catalogo" class="catalogue">
-        <div class="catalogue-head"><div><span class="eyebrow">ELIGE TU PRÓXIMA AVENTURA</span><h2>Un mundo de historias 📚</h2></div></div>
         <div class="tools"><label class="searchbox"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar por título, autor, género..." aria-label="Buscar libros"></label></div>
         <div class="catalog-controls">
           <label class="available-toggle" for="only-available">
