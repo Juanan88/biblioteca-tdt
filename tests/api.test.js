@@ -49,14 +49,18 @@ test("circuito API: catálogo, CRUD, concurrencia, historial, recuperación y ad
  result=await request("POST","/api/books",{title:"El cuento de prueba",author:"Vecindario",audience:"infantil",min_age:4});
  assert.equal(result.status,201);
  const bookId=result.data.id;
+ assert.equal(db.prepare("SELECT donor_name FROM books WHERE id=?").get(bookId).donor_name,"Anónimo");
  assert.match(bookId,/^[0-9a-f-]{36}$/);
- result=await request("POST","/api/books",{title:"El cuento de prueba",author:"Vecindario"});
+ result=await request("POST","/api/books",{title:"El cuento de prueba",author:"Vecindario",donor_name:"Elena"});
  assert.equal(result.status,201,"se permiten varios ejemplares");
+ const secondId=result.data.id;
+ assert.equal(db.prepare("SELECT donor_name FROM books WHERE id=?").get(secondId).donor_name,"Elena");
  result=await request("POST","/api/books",{title:""});
  assert.equal(result.status,400,"un título vacío se rechaza");
 
  result=await request("GET","/api/books");
  assert.equal(result.data.books.length,2);
+ assert.deepEqual(result.data.books.map(b=>b.donor_name).sort(),["Anónimo","Elena"]);
  const contenders=await Promise.all([
   request("POST","/api/books/"+bookId+"/borrow",{name:"Vecino A"}),
   request("POST","/api/books/"+bookId+"/borrow",{name:"Vecino B"})
@@ -69,9 +73,10 @@ test("circuito API: catálogo, CRUD, concurrencia, historial, recuperación y ad
  const priorAlias=row.borrower_alias;
 
  // Edición y recuperación de ficha, incluso estando prestado.
- result=await request("PATCH","/api/books/"+bookId,{title:"Título corregido",author:"Vecindario",min_age:5});
+ result=await request("PATCH","/api/books/"+bookId,{title:"Título corregido",author:"Vecindario",min_age:5,donor_name:"Vecino Luis"});
  assert.equal(result.status,200);
  assert.equal(db.prepare("SELECT title FROM books WHERE id=?").get(bookId).title,"Título corregido");
+ assert.equal(db.prepare("SELECT donor_name FROM books WHERE id=?").get(bookId).donor_name,"Vecino Luis");
  result=await request("GET","/api/admin/books");
  assert.equal(result.status,401);
 
@@ -90,10 +95,12 @@ test("circuito API: catálogo, CRUD, concurrencia, historial, recuperación y ad
  assert.ok(result.data.revisions.every(r=>!JSON.stringify(r).includes("Vecino A")&&!JSON.stringify(r).includes("Vecino B")),"no conserva alias históricos");
  const editRevision=result.data.revisions.find(r=>r.before.title==="El cuento de prueba"&&r.after.title==="Título corregido");
  assert.ok(editRevision,"registra los metadatos anteriores");
+ assert.ok(result.data.revisions.some(r=>r.before.donor_name==="Anónimo"&&r.after.donor_name==="Vecino Luis"),"historial específico de donante");
  result=await request("POST","/api/admin/revisions/"+editRevision.id+"/restore",{},cookie);
  assert.equal(result.status,200);
  row=db.prepare("SELECT * FROM books WHERE id=?").get(bookId);
  assert.equal(row.title,"El cuento de prueba");assert.equal(row.status,"borrowed");assert.equal(row.borrower_alias,priorAlias);
+ assert.equal(row.donor_name,"Vecino Luis","restaurar versión antigua sin dato de donante conserva el actual");
 
  // Retirada mientras está prestado: conserva el préstamo y lo restaura intacto.
  result=await request("POST","/api/admin/books/"+bookId+"/remove",{},cookie);
@@ -132,6 +139,7 @@ test("circuito API: catálogo, CRUD, concurrencia, historial, recuperación y ad
  assert.equal(backup.status,200);
  assert.equal(backup.data.format,"biblioteca-tdt");
  assert.equal(backup.data.books.length,2);
+ assert.equal(backup.data.books.find(b=>b.id===secondId).donor_name,"Elena");
  assert.ok(backup.data.revisions.length>0);
  const noChange=await request("POST","/api/admin/backup/restore",{confirmation:"RESTAURAR",backup:backup.data},cookie);
  assert.equal(noChange.status,200);
@@ -141,6 +149,7 @@ test("circuito API: catálogo, CRUD, concurrencia, historial, recuperación y ad
  assert.equal(recovered.status,200);
  assert.equal(recovered.data.added,1);
  assert.equal(db.prepare("SELECT title FROM books WHERE id=?").get(bookId).title,"El cuento de prueba");
+ assert.equal(db.prepare("SELECT donor_name FROM books WHERE id=?").get(bookId).donor_name,"Vecino Luis");
  const history=await request("GET","/api/admin/events",undefined,cookie);
  assert.equal(history.status,200);
  assert.ok(history.data.events.some(x=>x.action==="prestamo"));
