@@ -1,5 +1,15 @@
 # Biblioteca TDT
 
+> **Actualización de seguridad y UX (15/10/2026):**
+> - Préstamos protegidos contra peticiones simultáneas; «Está en la estantería» solo puede recuperar libros en estado **Por comprobar**.
+> - Retirar/restaurar un libro **no borra el alias ni la fecha de un préstamo activo**.
+> - **Historial de versiones automático** en D1, con recuperación de datos bibliográficos para administración y sin conservar alias históricos. La migración es idempotente y se aplica en la primera escritura.
+> - **Copia de seguridad JSON y recuperación no destructiva** de ejemplares ausentes desde Administración. Además, D1 Time Travel Free proporciona recuperación integral dentro de su ventana gratuita de **7 días**, según Cloudflare.
+> - Autocompletado ISBN respetuoso con el texto escrito, portada principal/secundaria, edición de URL bibliográfica, validación de campos y errores cerca de los formularios.
+> - Nueva suite `tests/api.test.js` con SQLite para préstamos en paralelo, cambio de estado, retirada, historial, backup/restauración y autenticación; GitHub Actions ejecuta las pruebas en cada commit.
+>
+> **Seguridad:** Los respaldos JSON incluyen nombres/alias de los préstamos **vigentes**. Descárgalos solo desde Administración y no los compartas. Consulta [BACKUPS.md](./BACKUPS.md).
+>
 > **Actualización catálogo (15/10/2026):** se han eliminado los filtros por edades/categorías y ahora queda **un único interruptor «Solo disponibles»**. Se puede alternar entre vista de **Tarjetas** y **Lista**; la preferencia se guarda en este navegador. Las fichas muestran la **portada real procedente de catálogos bibliográficos** cuando está disponible (primero `cover_url`, o por ISBN a través de Open Library); si no hay imagen, aparece una cubierta ilustrativa de sustitución. Los tres libros de demostración intentan mostrar sus portadas por ISBN, siguen siendo solo ejemplos visuales y **no se insertan en D1**.
 
 > **Actualización UX (15/10/2026):** Se ha reducido a **un único botón «+ Donar un libro»** en la cabecera, eliminado los filtros duplicados y simplificado el formulario de donación. Mientras no existan libros reales, el catálogo muestra **tres libros de ejemplo señalados claramente como «EJEMPLO»**, con portadas ilustrativas creadas con CSS. No se guardan en D1 y desaparecen con el primer libro real. Consulta [AUDITORIA_UX.md](./AUDITORIA_UX.md).
@@ -10,7 +20,7 @@ Biblioteca vecinal colaborativa. **Sin registro de usuarios, sin QR individuales
 
 El usuario ha creado una base de datos Cloudflare D1 llamada `biblioteca-tdt`, ha ejecutado `schema.sql` y ha publicado un proyecto de **Cloudflare Pages** con URL comunicada: **https://biblioteca-tdt.pages.dev/**.
 
-El código original se había preparado para Workers; por ello, se ha adaptado **a Pages Functions** mediante `functions/api/[[path]].js` y configuración `wrangler.jsonc` con `pages_build_output_dir`. **El despliegue nuevo y las operaciones contra D1 aún deben confirmarse**; no asumir que «Success» de una versión anterior garantiza que la API funcione.
+El código original fue adaptado a **Cloudflare Pages Functions** y la base D1 ya está vinculada. El usuario ha confirmado que el flujo principal funciona en la aplicación desplegada. **Las mejoras de historial, copia y revisión de estados de octubre de 2026 aún requieren confirmar el nuevo despliegue y la batería automatizada**; no asumir que un «Success» antiguo valida los cambios recientes.
 
 ## Servicios utilizados: coste 0 €
 
@@ -92,7 +102,11 @@ Para desplegar manualmente con el CLI desde una sesión autenticada (no obligato
 - `src/core.js`: validación y lógica pura.
 - `schema.sql`: esquema de D1.
 - `wrangler.jsonc`: configuración de Pages y binding de D1.
-- `tests/core.test.js`: pruebas unitarias.
+- `tests/core.test.js`, `tests/metadata.test.js`, `tests/ux.test.js`: pruebas unitarias y de interfaz.
+- `tests/api.test.js`: pruebas de integración con SQLite en memoria, incluidos cambios simultáneos.
+- `.github/workflows/test.yml`: ejecución automática de Node 24 en cada commit.
+- `src/history.js` y `migrations/001_book_revisions.sql`: historial recuperable y migración no destructiva.
+- `BACKUPS.md`: guía de copias, restauración de datos y Time Travel en plan Free.
 - `ESPECIFICACION.md`: ocho decisiones aprobadas por el usuario.
 - `AGENTS.md`: instrucciones para seguir el desarrollo.
 
