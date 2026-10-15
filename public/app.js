@@ -1,19 +1,20 @@
-const state = {books:[],groups:new Map(),query:"",filter:"all",stream:null,scanStop:false};
-const demoBooks = [
-  {title:"El monstruo de colores",author:"Anna Llenas",audience:"infantil",min_age:3,genre:"Emociones",status:"available",color:"colors",symbol:"🎨",coverTitle:"EL MONSTRUO<br>DE COLORES"},
-  {title:"¿A qué sabe la luna?",author:"Michael Grejniec",audience:"infantil",min_age:3,genre:"Animales",status:"borrowed",color:"moon",symbol:"🌙",coverTitle:"¿A QUÉ SABE<br>LA LUNA?"},
-  {title:"Matilda",author:"Roald Dahl",audience:"infantil",min_age:8,genre:"Fantasía",status:"review",color:"magic",symbol:"✨",coverTitle:"MATILDA"}
+const VIEW_STORAGE_KEY="biblioteca-tdt-catalogue-view";
+function initialView(){try{return localStorage.getItem(VIEW_STORAGE_KEY)==="list"?"list":"cards";}catch{return "cards";}}
+const state={books:[],groups:new Map(),query:"",availableOnly:false,view:initialView(),stream:null,scanStop:false};
+const demoBooks=[
+ {title:"El monstruo de colores",author:"Anna Llenas",isbn:"9788493987749",min_age:3,genre:"Emociones",status:"available",color:"colors",symbol:"🎨",coverTitle:"EL MONSTRUO<br>DE COLORES"},
+ {title:"¿A qué sabe la luna?",author:"Michael Grejniec",isbn:"9788495123619",min_age:3,genre:"Animales",status:"borrowed",color:"moon",symbol:"🌙",coverTitle:"¿A QUÉ SABE<br>LA LUNA?"},
+ {title:"Matilda",author:"Roald Dahl",isbn:"9789681903268",min_age:8,genre:"Fantasía",status:"review",color:"magic",symbol:"✨",coverTitle:"MATILDA"}
 ];
-function demoCatalog(query,filter){
- const filtered=demoBooks.filter(b=>(!query||clean([b.title,b.author,b.genre].join(" ")).includes(query))&&
-  (filter==="all"||(filter==="available"?b.status==="available":b.audience===filter)));
- if(!filtered.length)return '<div class="empty"><strong>No hay ejemplos con esos filtros</strong><p>Prueba otra búsqueda o pulsa «Todos».</p><button class="button outline" data-action="clear-filters">Quitar filtros</button></div>';
- return '<div class="demo-intro"><span class="demo-intro-icon" aria-hidden="true">✦</span><div><strong>Así se verá nuestra biblioteca</strong><p>Estos 3 libros son solo ejemplos visuales, no están registrados ni disponibles para préstamo. Desaparecerán cuando se añada el primer libro real.</p></div></div>'+
+function demoCatalog(query,availableOnly){
+ const filtered=demoBooks.filter(b=>(!query||clean([b.title,b.author,b.genre].join(" ")).includes(query))&&(!availableOnly||b.status==="available"));
+ if(!filtered.length)return '<div class="empty"><strong>No hay ejemplos disponibles</strong><p>Desactiva «Solo disponibles» o prueba otra búsqueda.</p><button class="button outline" data-action="clear-filters">Quitar filtros</button></div>';
+ return '<div class="demo-intro"><span class="demo-intro-icon" aria-hidden="true">✦</span><div><strong>Así se verá nuestra biblioteca</strong><p>Estos tres libros son ejemplos visuales, no están registrados ni disponibles para préstamo. Se ocultarán cuando se añada el primer libro real.</p></div></div>'+
  filtered.map(b=>'<article class="book-card sample-card" aria-label="Ejemplo: '+escapeHtml(b.title)+'">'+
- '<div class="cover-area"><div class="demo-book-cover demo-'+b.color+'"><span class="demo-cover-symbol" aria-hidden="true">'+b.symbol+'</span><strong>'+b.coverTitle+'</strong><small>'+escapeHtml(b.author)+'</small></div>'+
+ '<div class="cover-area">'+coverHTML(b,true)+
  '<span class="demo-sticker">EJEMPLO</span><span class="age-tag">+'+b.min_age+' años</span></div>'+
  '<div class="book-info">'+pill(b.status)+'<h3>'+escapeHtml(b.title)+'</h3><p class="author">'+escapeHtml(b.author)+'</p>'+
- '<div class="bottom"><span>'+escapeHtml(b.genre)+'</span><span>Vista previa</span></div></div></article>').join("");
+ '<div class="bottom"><span>'+escapeHtml(b.genre)+'</span><span>Solo demostración</span></div></div></article>').join("");
 }
 
 const $ = (s) => document.querySelector(s);
@@ -24,6 +25,33 @@ const shortDate = (iso) => {if(!iso) return "";const d=new Date(String(iso).repl
 const due = (date) => date && Date.now()-Date.parse(String(date).replace(" ","T")+"Z") >= 30*86400000;
 const pill = (status) => status==="available" ? '<span class="chip">● Disponible</span>' : status==="borrowed" ? '<span class="chip borrowed">● Prestado</span>' : '<span class="chip review">● Por comprobar</span>';
 const btn = (text,action,id,style="outline") => '<button class="button '+style+'" data-action="'+action+'" data-id="'+escapeHtml(id)+'">'+text+'</button>';
+
+function coverURL(book){
+ const isbn=String(book.isbn||"").replace(/[\s-]/g,"");
+ if(typeof book.cover_url==="string" && book.cover_url){
+  try{const url=new URL(book.cover_url);
+   if(url.protocol==="https:" && ["covers.openlibrary.org","books.google.com","books.googleusercontent.com"].includes(url.hostname.toLowerCase()))return url.href;
+  }catch{}
+ }
+ if(/^(?:\d{10}|\d{13})$/.test(isbn))return "https://covers.openlibrary.org/b/isbn/"+isbn+"-M.jpg?default=false";
+ return "";
+}
+function coverHTML(book,demo=false){
+ const fallback=demo
+  ? '<div class="demo-book-cover demo-'+escapeHtml(book.color)+'"'+(coverURL(book)?' hidden':'')+'><span class="demo-cover-symbol" aria-hidden="true">'+escapeHtml(book.symbol)+'</span><strong>'+book.coverTitle+'</strong><small>'+escapeHtml(book.author)+'</small></div>'
+  : '<div class="cover-placeholder" aria-hidden="true"'+(coverURL(book)?' hidden':'')+'>✦</div>';
+ const url=coverURL(book);
+ return (url?'<img class="book-cover-image" src="'+escapeHtml(url)+'" alt="Portada de '+escapeHtml(book.title)+'" loading="lazy" referrerpolicy="no-referrer">':"")+fallback;
+}
+document.addEventListener("error",(event)=>{
+ const img=event.target;
+ if(img instanceof HTMLImageElement && img.classList.contains("book-cover-image")){
+  img.hidden=true;
+  const fallback=img.nextElementSibling;
+  if(fallback)fallback.hidden=false;
+ }
+},true);
+
 function stopCamera(){
   state.scanStop=true;
   if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null;}
@@ -62,38 +90,34 @@ function regroup(){
   }
 }
 function render(){
-  regroup();
-  $("#books").classList.toggle("demo-mode",state.books.length===0);
-  document.querySelectorAll(".quick-filters button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.filter===state.filter)));
-  $("#count-all").textContent=state.books.length;
-  $("#count-free").textContent=state.books.filter(b=>b.status==="available").length;
-  $("#count-borrowed").textContent=state.books.filter(b=>b.status==="borrowed").length;
-  let groups=[...state.groups.entries()];
-  if(state.books.length===0){
-    $("#books").innerHTML=demoCatalog(clean(state.query),state.filter);
-    return;
-  }
-  const filter=state.filter, query=clean(state.query);
-  groups=groups.filter(([key,items])=>{
-    const book=items[0];
-    const search=[book.title,book.author,book.genre,book.isbn].map(clean).join(" ");
-    const hasFree=items.some(b=>b.status==="available");
-    return (!query||search.includes(query)) && (filter==="all" || (filter==="available" ? hasFree : book.audience===filter));
-  });
-  if(!groups.length){
-    $("#books").innerHTML='<div class="empty"><div style="font-size:35px">📚</div><strong>No hay libros con esos filtros</strong><p>Prueba otra búsqueda o elimina los filtros.</p><button class="button outline" data-action="clear-filters">Quitar filtros</button></div>';
-    return;
-  }
-  $("#books").innerHTML=groups.map(([key,items])=>{
-    const book=items[0],available=items.filter(b=>b.status==="available").length,borrowed=items.filter(b=>b.status==="borrowed").length;
-    const status=available ? "available" : borrowed ? "borrowed" : "review";
-    const cover=book.cover_url ? '<img src="'+escapeHtml(book.cover_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer">'
-      : '<div class="cover-placeholder" aria-hidden="true">✦</div>';
-    return '<button class="book-card" data-action="view" data-key="'+escapeHtml(encodeURIComponent(key))+'" aria-label="Ver '+escapeHtml(book.title)+'">'+
-      '<div class="cover-area">'+cover+(book.min_age!=null?'<span class="age-tag">+'+Number(book.min_age)+' años</span>':"")+'</div><div class="book-info">'+pill(status)+
-      '<h3>'+escapeHtml(book.title)+'</h3><p class="author">'+escapeHtml(book.author||"Autor no indicado")+'</p>'+
-      '<div class="bottom"><span>'+ (items.length>1 ? items.length+" ejemplares" : escapeHtml(book.audience||"Para todos"))+'</span><span>Ver libro →</span></div></div></button>';
-  }).join("");
+ regroup();
+ const booksEl=$("#books");
+ booksEl.classList.toggle("demo-mode",state.books.length===0);
+ booksEl.classList.toggle("list-mode",state.view==="list");
+ $("#only-available").checked=state.availableOnly;
+ document.querySelectorAll('[data-action="view-mode"]').forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.view===state.view)));
+ $("#count-all").textContent=state.books.length;
+ $("#count-free").textContent=state.books.filter(b=>b.status==="available").length;
+ $("#count-borrowed").textContent=state.books.filter(b=>b.status==="borrowed").length;
+ let groups=[...state.groups.entries()];
+ const query=clean(state.query);
+ if(state.books.length===0){booksEl.innerHTML=demoCatalog(query,state.availableOnly);return;}
+ groups=groups.filter(([key,items])=>{
+  const book=items[0], search=[book.title,book.author,book.genre,book.isbn].map(clean).join(" ");
+  return (!query||search.includes(query)) && (!state.availableOnly || items.some(b=>b.status==="available"));
+ });
+ if(!groups.length){
+  booksEl.innerHTML='<div class="empty"><div style="font-size:35px" aria-hidden="true">📚</div><strong>No encontramos libros con esos criterios</strong><p>Prueba otra búsqueda o desactiva el filtro.</p><button class="button outline" data-action="clear-filters">Quitar filtros</button></div>';
+  return;
+ }
+ booksEl.innerHTML=groups.map(([key,items])=>{
+  const book=items[0],available=items.filter(b=>b.status==="available").length,borrowed=items.filter(b=>b.status==="borrowed").length;
+  const status=available ? "available" : borrowed ? "borrowed" : "review";
+  return '<button class="book-card" data-action="view" data-key="'+escapeHtml(encodeURIComponent(key))+'" aria-label="Ver '+escapeHtml(book.title)+'">'+
+   '<div class="cover-area">'+coverHTML(book)+(book.min_age!=null?'<span class="age-tag">+'+Number(book.min_age)+' años</span>':"")+'</div>'+
+   '<div class="book-info">'+pill(status)+'<h3>'+escapeHtml(book.title)+'</h3><p class="author">'+escapeHtml(book.author||"Autor no indicado")+'</p>'+
+   '<div class="bottom"><span>'+(items.length>1?items.length+" ejemplares":escapeHtml(book.genre||book.audience||"Para todos"))+'</span><span>Ver libro →</span></div></div></button>';
+ }).join("");
 }
 async function refresh(){
   try{const data=await api("/api/books");state.books=data.books||[];render();}
@@ -104,7 +128,7 @@ function detail(key){
   if(!items?.length) return close();
   const book=items[0];
   const free=items.filter(x=>x.status==="available"),borrowed=items.filter(x=>x.status==="borrowed"),review=items.filter(x=>x.status==="review");
-  let extra='<p class="muted">'+escapeHtml(book.author||"Autor desconocido")+'</p>';
+  let extra='<div class="detail-summary"><div class="detail-cover">'+coverHTML(book)+'</div><div class="detail-intro"><p class="muted">'+escapeHtml(book.author||"Autor desconocido")+'</p></div></div>';
   if(book.description)extra+='<p class="dialog-body">'+escapeHtml(book.description)+'</p>';
   extra+='<p class="tiny">'+[book.audience,book.min_age!=null?"Desde "+book.min_age+" años":null,book.genre].filter(Boolean).map(escapeHtml).join(" · ")+'</p>';
   extra+='<hr class="rule"><p><strong>'+items.length+' ejemplar'+(items.length===1?"":"es")+'</strong> · '+free.length+' disponible'+(free.length===1?"":"s")+'</p>';
@@ -265,8 +289,14 @@ document.addEventListener("click",async(event)=>{
  if(!b)return;
  const action=b.dataset.action,id=b.dataset.id;
  if(action==="close")return close();
- if(action==="quick-filter"){state.filter=b.dataset.filter;render();document.querySelector("#catalogo")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
- if(action==="clear-filters"){state.filter="all";state.query="";$("#search").value="";render();return;}
+ if(action==="view-mode"){
+  const mode=b.dataset.view;
+  if(mode!=="cards"&&mode!=="list")return;
+  state.view=mode;
+  try{localStorage.setItem(VIEW_STORAGE_KEY,mode);}catch{}
+  render();return;
+ }
+ if(action==="clear-filters"){state.availableOnly=false;state.query="";$("#search").value="";render();return;}
  if(action==="reload")return refresh();
  if(action==="view")return detail(decodeURIComponent(b.dataset.key));
  if(action==="borrow"||action==="return"||action==="missing"||action==="found")return move(action,id);
@@ -296,4 +326,5 @@ document.addEventListener("submit",async(event)=>{
 $("#top-add").addEventListener("click",()=>bookForm());
 $("#top-admin").addEventListener("click",admin);
 $("#search").addEventListener("input",(event)=>{state.query=event.target.value;render();});
+$("#only-available").addEventListener("change",(event)=>{state.availableOnly=event.target.checked;render();});
 refresh();
