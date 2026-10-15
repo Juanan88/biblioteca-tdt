@@ -170,7 +170,7 @@ export default {
     if(path.startsWith("/api/admin/")) {
       if(!await isAdmin(request,env)) return fail("Acceso reservado a administración.",401);
       if(method==="GET" && path==="/api/admin/books") {
-        const {results}=await env.DB.prepare(bookSelect+",removed_at FROM books ORDER BY created_at DESC LIMIT 1500").all();
+        const {results}=await env.DB.prepare(bookSelect.replace(" FROM books",",removed_at FROM books")+" ORDER BY created_at DESC LIMIT 1500").all();
         return reply({books:results});
       }
       if(method==="GET" && path==="/api/admin/events") {
