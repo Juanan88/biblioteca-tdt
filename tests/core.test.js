@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {isbn, bookInput, aliasInput, recommendedReturn, text} from "../src/core.js";
+import {isbn, bookInput, aliasInput, donorInput, recommendedReturn, text} from "../src/core.js";
 
 test("validar ISBN-10 e ISBN-13 con checksum",()=>{
   assert.equal(isbn("0-306-40615-2"),"0306406152");
@@ -46,4 +46,15 @@ test("plazo recomendado sin bloqueo ni devolución automática",()=>{
   assert.equal(recommendedReturn("2026-09-16 12:00:00",now),false);
   assert.equal(recommendedReturn("2026-09-15 12:00:00",now),true);
   assert.equal(recommendedReturn(null,now),false);
+});
+
+test("donante opcional: Anónimo predeterminado, nombre editable y validación",()=>{
+ assert.equal(donorInput(null),"Anónimo");
+ assert.equal(donorInput("  "),"Anónimo");
+ assert.equal(donorInput("Ana"),"Ana");
+ assert.equal(bookInput({title:"Cuento"}).donor_name,"Anónimo");
+ assert.equal(bookInput({title:"Cuento",donor_name:"  Vecina Ana  "}).donor_name,"Vecina Ana");
+ assert.throws(()=>donorInput("x".repeat(41)));
+ assert.throws(()=>donorInput("correo@ejemplo.com"));
+ assert.throws(()=>donorInput("https://example.com"));
 });
