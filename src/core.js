@@ -16,6 +16,12 @@ export function isbn(value) {
   const sum = [...clean].reduce((total, char, index) => total + Number(char) * (index % 2 ? 3 : 1), 0);
   return sum % 10 === 0 ? clean : null;
 }
+export function optionalText(value,limit,label){
+ if(value==null||value==="")return null;
+ if(typeof value!=="string")throw new Error(label+" no es válido.");
+ if(value.trim().length>limit)throw new Error(label+" supera "+limit+" caracteres.");
+ return text(value,limit);
+}
 export function bookInput(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Datos no válidos.");
   const title = text(input.title, 200);
@@ -25,11 +31,13 @@ export function bookInput(input) {
     code = isbn(input.isbn);
     if (!code) throw new Error("El ISBN no es válido.");
   }
+  if(input.audience!=null && input.audience!=="" && !["infantil","juvenil","adultos"].includes(input.audience))throw new Error("La categoría no es válida.");
+  if(input.condition!=null && input.condition!=="" && !["nuevo","bueno","aceptable","deteriorado"].includes(input.condition))throw new Error("La conservación no es válida.");
   const audience = ["infantil", "juvenil", "adultos"].includes(input.audience) ? input.audience : null;
   const condition = ["nuevo", "bueno", "aceptable", "deteriorado"].includes(input.condition) ? input.condition : null;
   const age = (input.min_age === "" || input.min_age == null) ? null : Number(input.min_age);
   if (age !== null && (!Number.isInteger(age) || age < 0 || age > 120)) throw new Error("La edad no es válida.");
-  const rawCover = text(input.cover_url, 600);
+  const rawCover = optionalText(input.cover_url,600,"La dirección de la portada");
   let cover_url = null;
   if (rawCover) {
     try {
@@ -40,10 +48,10 @@ export function bookInput(input) {
   }
   return {
     isbn: code, title,
-    author: text(input.author, 160),
-    description: text(input.description, 1500),
+    author: optionalText(input.author,160,"El autor"),
+    description: optionalText(input.description,1500,"La sinopsis"),
     cover_url,
-    genre: text(input.genre, 60),
+    genre: optionalText(input.genre,60,"El género"),
     audience, min_age: age, condition
   };
 }
