@@ -127,3 +127,8 @@ dialog .dialog-top h2{font-family:"Trebuchet MS",Georgia,serif;font-weight:700}
  .brand small{max-width:130px}
  .site-header #top-add{padding:7px 8px;font-size:11px}
 }
+
+/* Las tres fichas de muestra ocupan toda la anchura de la rejilla. */
+.books-grid.demo-mode{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:690px){.books-grid.demo-mode{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:350px){.books-grid.demo-mode{grid-template-columns:1fr}}
