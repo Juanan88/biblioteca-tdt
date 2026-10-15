@@ -32,9 +32,14 @@ test("rechaza datos inválidos",()=>{
   assert.equal(text(null),null);
 });
 test("portadas admiten únicamente alojamientos bibliográficos HTTPS",()=>{
-  assert.equal(bookInput({title:"A",cover_url:"http://evil.example/x.jpg"}).cover_url,null);
-  assert.equal(bookInput({title:"A",cover_url:"https://evil.example/x.jpg"}).cover_url,null);
+  assert.throws(()=>bookInput({title:"A",cover_url:"http://evil.example/x.jpg"}));
+  assert.throws(()=>bookInput({title:"A",cover_url:"https://evil.example/x.jpg"}));
   assert.equal(bookInput({title:"A",cover_url:"https://covers.openlibrary.org/b/id/11-M.jpg"}).cover_url,"https://covers.openlibrary.org/b/id/11-M.jpg");
+});
+test("los datos opcionales demasiado largos generan errores, nunca se pierden sin aviso",()=>{
+  assert.throws(()=>bookInput({title:"Cuento",description:"a".repeat(1501)}));
+  assert.throws(()=>bookInput({title:"Cuento",author:"x".repeat(161)}));
+  assert.throws(()=>bookInput({title:"Cuento",audience:"desconocido"}));
 });
 test("plazo recomendado sin bloqueo ni devolución automática",()=>{
   const now=Date.parse("2026-10-15T12:00:00Z");
