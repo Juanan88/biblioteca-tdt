@@ -228,3 +228,15 @@ dialog .dialog-top h2{font-family:"Trebuchet MS",Georgia,serif;font-weight:700}
  .book-card,.button,.view-choice,.quick-filters button,.toggle-track{transition:none!important}
  html{scroll-behavior:auto}
 }
+
+
+/* Nombre del donante: discreto pero visible en tarjetas, listas y detalles. */
+.book-info .donor-label,.detail-intro .donor-label{font-size:12px;line-height:1.45;color:#58766b;font-weight:650;margin:5px 0 7px;overflow-wrap:anywhere}
+.detail-intro .donor-label{font-size:14px;margin:8px 0 0;color:#337d66}
+.books-grid.list-mode .book-info .donor-label{font-size:12px;margin:4px 0}
+.book-info .donor-label::selection,.detail-intro .donor-label::selection{background:#fff2cf}
+@media(max-width:690px){
+ .book-info .donor-label{font-size:11px;line-height:1.35;margin:5px 0}
+ .books-grid.list-mode .book-info .donor-label{font-size:11px}
+ .detail-intro .donor-label{font-size:12px}
+}
