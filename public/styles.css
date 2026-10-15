@@ -240,3 +240,98 @@ dialog .dialog-top h2{font-family:"Trebuchet MS",Georgia,serif;font-weight:700}
  .books-grid.list-mode .book-info .donor-label{font-size:11px}
  .detail-intro .donor-label{font-size:12px}
 }
+
+
+/* FASE 1 UX: la portada acompaña, pero el catálogo es el protagonista.
+   Clases específicas para no alterar fichas, formularios y vistas existentes. */
+.site-header{height:78px}
+.hero.hero--compact{
+  min-height:0;
+  grid-template-columns:minmax(0,1.45fr) minmax(175px,.55fr);
+  border-radius:20px;
+}
+.hero--compact .hero-copy{padding:25px 34px 27px}
+.hero--compact .eyebrow{font-size:10px;letter-spacing:1.6px}
+.hero--compact h1{
+  font-size:clamp(28px,3.5vw,40px);
+  letter-spacing:-1.1px;line-height:1.14;
+  margin:11px 0 9px;
+}
+.hero--compact p{
+  font-size:14px;line-height:1.55;max-width:580px;margin:0;
+}
+.hero--compact .hero-art{min-height:180px;overflow:hidden}
+.hero--compact .hero-art .circle{
+  top:-55px;right:-35px;width:265px;height:265px;
+}
+.hero--compact .hero-art .book{
+  width:76px;height:116px;top:38px;font-size:30px;
+  border-left-width:5px;box-shadow:5px 9px 16px #133c3260;
+}
+.hero--compact .hero-art .book-one{right:153px;transform:rotate(-15deg)}
+.hero--compact .hero-art .book-two{right:91px;top:30px;transform:rotate(6deg)}
+.hero--compact .hero-art .book-three{right:31px;transform:rotate(19deg)}
+.hero--compact .hero-art .sparkle-a{top:19px;right:23px;font-size:22px}
+.hero--compact .hero-art .sparkle-b{top:20px;right:233px;font-size:21px}
+.catalogue.catalogue--focused{margin-top:31px;scroll-margin-top:16px}
+.catalogue--focused .catalogue-head{
+  display:flex;flex-direction:row;align-items:end;
+  justify-content:space-between;gap:20px;margin-bottom:15px;
+}
+.catalogue--focused .catalogue-title{min-width:0}
+.catalogue--focused .catalogue-head .eyebrow{font-size:10px}
+.catalogue--focused .catalogue-head h2{
+  margin:5px 0 0;font-size:clamp(26px,2.7vw,34px);
+}
+.catalogue--focused .stats.stats-inline{
+  margin:0;border:0;border-radius:0;box-shadow:none;
+  display:flex;align-items:center;justify-content:flex-end;
+  gap:14px;min-width:0;background:transparent;
+}
+.catalogue--focused .stats.stats-inline>div{
+  display:flex;align-items:baseline;justify-content:flex-start;
+  flex-direction:row;gap:5px;padding:0;
+  border:0;text-align:left;white-space:nowrap;
+}
+.catalogue--focused .stats.stats-inline>div+div{border-left:0}
+.catalogue--focused .stats.stats-inline strong{
+  font:700 21px/1.25 system-ui,sans-serif;color:#2e7a6c;
+}
+.catalogue--focused .stats.stats-inline>div:first-child strong{color:#ae7153}
+.catalogue--focused .stats.stats-inline span{font-size:11px;color:#516a5f}
+.catalogue--focused .tools{margin-bottom:0}
+.catalogue--focused .searchbox{min-height:48px}
+.catalogue--focused .searchbox input{height:46px}
+.catalogue--focused .searchbox:focus-within{
+  border-color:#277f77;outline:3px solid #d8eee6;outline-offset:2px;
+}
+.catalogue--focused .catalog-controls{margin:12px 0 19px}
+.catalogue--focused .books-grid{margin-bottom:58px}
+@media(max-width:690px){
+  .site-header{height:66px}
+  .hero.hero--compact{display:block;border-radius:16px;min-height:0}
+  .hero--compact .hero-copy{padding:21px 20px 22px}
+  .hero--compact .eyebrow{font-size:9px;letter-spacing:1.2px}
+  .hero--compact h1{font-size:clamp(27px,7vw,33px);margin:9px 0 7px;letter-spacing:-.7px}
+  .hero--compact p{font-size:13px;line-height:1.45;max-width:45ch}
+  .hero--compact .hero-art{display:none}
+  .catalogue.catalogue--focused{margin-top:22px}
+  .catalogue--focused .catalogue-head{flex-direction:column;align-items:stretch;gap:8px;margin-bottom:13px}
+  .catalogue--focused .catalogue-head .eyebrow{font-size:9px;letter-spacing:1.15px}
+  .catalogue--focused .catalogue-head h2{font-size:27px;line-height:1.12;margin:4px 0}
+  .catalogue--focused .stats.stats-inline{justify-content:flex-start;gap:13px;flex-wrap:wrap}
+  .catalogue--focused .stats.stats-inline>div{gap:4px}
+  .catalogue--focused .stats.stats-inline strong{font-size:17px}
+  .catalogue--focused .stats.stats-inline span{font-size:11px}
+  .catalogue--focused .searchbox{min-height:45px}
+  .catalogue--focused .searchbox input{height:43px;font-size:14px}
+  .catalogue--focused .catalog-controls{margin:9px 0 15px}
+  .catalogue--focused .books-grid{margin-bottom:42px}
+}
+@media(max-width:380px){
+  .hero--compact .hero-copy{padding:18px 17px 19px}
+  .hero--compact h1{font-size:25px}
+  .catalogue--focused .stats.stats-inline{gap:9px}
+  .catalogue--focused .stats.stats-inline strong{font-size:16px}
+  .catalogue--focused .stats.stats-inline span{font-size:10px}
+}
