@@ -73,3 +73,57 @@ dialog .dialog-top h2{font-family:"Trebuchet MS",Georgia,serif;font-weight:700}
 .stats>div{padding:17px 7px}
 .age-tag{font-size:10px;padding:4px 7px;bottom:9px;left:9px}
 }
+
+
+/* UX audit: una sola acción principal para donar; acceso de administración secundario. */
+.site-header #top-add{display:inline-flex}
+.site-header nav{flex-shrink:0}
+.site-header .button.primary{font-size:14px;border-radius:12px;box-shadow:0 3px 0 #c1d9ce}
+.catalogue-head{margin-bottom:22px}
+.tools{display:block}
+.searchbox{max-width:100%}
+.quick-filters{margin:16px 0 25px}
+.footer-admin{background:none;border:0;text-decoration:underline;color:inherit;font-size:inherit;padding:3px 0;cursor:pointer}
+.footer-admin:hover{color:#227c79}
+.footer-admin:focus-visible{outline:2px solid #227c79;outline-offset:2px;border-radius:3px}
+.book-extras{margin:18px 0 14px;border:1px solid #e0e9dc;border-radius:12px;padding:0 15px;background:#fbfdf9}
+.book-extras summary{cursor:pointer;padding:16px 3px;font-size:14px;font-weight:750;color:#286c62}
+.book-extras summary:focus-visible{outline:2px solid #28796c;outline-offset:3px}
+.book-extras[open]{padding-bottom:8px}
+.book-extras[open] summary{border-bottom:1px solid #e3e9dd;margin-bottom:10px}
+.demo-intro{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:15px 18px;background:#fff3df;border:1px solid #f3dfc2;border-radius:14px}
+.demo-intro-icon{font-size:31px;color:#b97855;flex-shrink:0}
+.demo-intro strong{font:700 18px "Trebuchet MS",system-ui,sans-serif;color:#694b38}
+.demo-intro p{color:#886d59;font-size:13px;line-height:1.5;margin:5px 0 0}
+.sample-card{cursor:default;box-shadow:0 3px 0 #ede8d9}
+.sample-card:hover{transform:none;box-shadow:0 3px 0 #ede8d9}
+.sample-card .cover-area{padding:15px}
+.demo-book-cover{width:142px;height:198px;max-width:82%;max-height:94%;border-radius:4px 10px 10px 4px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;text-align:center;overflow:hidden;box-shadow:6px 9px 14px #313d3138;border-left:8px solid #ffffff40;transform:rotate(-2deg);padding:14px 9px;color:#fff}
+.demo-book-cover strong{font:800 clamp(11px,1.35vw,15px)/1.25 "Trebuchet MS",system-ui,sans-serif;letter-spacing:.3px;position:relative;z-index:1}
+.demo-book-cover small{font-size:10px;line-height:1.35;position:relative;z-index:1}
+.demo-cover-symbol{font-size:53px;line-height:1.05;position:relative;z-index:1}
+.demo-colors{background:radial-gradient(circle at 80% 18%,#f9e2a6,transparent 43%),linear-gradient(130deg,#e8a67b,#d6676e 55%,#bf759e)}
+.demo-moon{background:radial-gradient(circle at 70% 24%,#d3e9fcaa,transparent 45%),linear-gradient(155deg,#194f81,#588ac0)}
+.demo-magic{background:radial-gradient(circle at 30% 25%,#f2d17f66,transparent 38%),linear-gradient(145deg,#296e5f,#183e44)}
+.demo-sticker{position:absolute;top:12px;left:12px;z-index:2;background:#fff;color:#785c4c;border:1px solid #e9d9c2;border-radius:5px;padding:5px 7px;font-size:9px;font-weight:850;letter-spacing:1px}
+.sample-card .book-info .bottom{font-size:12px}
+@media(max-width:690px){
+ .site-header{gap:7px}
+ .site-header #top-add{display:inline-flex;flex-shrink:0;font-size:12px;padding:8px 10px;min-height:40px;white-space:nowrap}
+ .brand{font-size:17px;gap:8px;letter-spacing:-.5px}
+ .brand small{font-size:10px;max-width:160px}
+ .brand-symbol{width:37px;height:37px;flex-shrink:0;font-size:23px}
+ .site-header nav{gap:0}
+ .demo-intro{gap:10px;padding:13px}
+ .demo-intro strong{font-size:15px}
+ .demo-intro p{font-size:12px}
+ .demo-book-cover{width:118px;height:155px}
+ .demo-book-cover strong{font-size:11px}
+ .demo-book-cover small{font-size:9px}
+ .demo-cover-symbol{font-size:38px}
+ .demo-sticker{font-size:8px;top:8px;left:8px}
+}
+@media(max-width:390px){
+ .brand small{max-width:130px}
+ .site-header #top-add{padding:7px 8px;font-size:11px}
+}
