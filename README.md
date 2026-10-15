@@ -1,5 +1,7 @@
 # Biblioteca TDT
 
+> **UX fase 1 completada (15/10/2026):** portada reducida a una bienvenida breve, sin segundo botón de navegación; los contadores de libros/disponibles/prestados se muestran compactos junto al título del catálogo, y la búsqueda, el filtro de disponibilidad, el cambio Tarjetas/Lista y las portadas quedan mucho más arriba, también en móvil. No se han tocado las acciones de donación, préstamo, devolución ni administración. Incluye tests de estructura responsive en `tests/ux.test.js`.
+
 > **Donaciones con nombre (15/10/2026):** al donar se puede escribir opcionalmente **nombre o apodo del donante** (máximo 40 caracteres). Si queda vacío, la ficha mostrará **«Donado por Anónimo»**. Se ve en tarjetas, lista y detalle; en títulos con varios ejemplares se indican sus donantes. El nombre es visible para cualquiera que conozca el enlace, así que no escribas apellidos ni datos personales. Los libros antiguos reciben **«Anónimo»** mediante migración automática y no destructiva. El historial y las copias de seguridad también incluyen este campo. No hay servicios de pago nuevos.
 
 > **Actualización de seguridad y UX (15/10/2026):**
