@@ -47,11 +47,11 @@ No es una web de acceso privado: conocer el enlace permite ver catálogo y alias
 3. Copia el identificador (**Database ID**) que muestre Cloudflare.
 4. En GitHub, abre [wrangler.jsonc](./wrangler.jsonc), edítalo y sustituye **REEMPLAZAR_CON_ID_DE_D1** por el identificador real. Guarda el cambio.
 5. En la base de datos D1 de Cloudflare, abre **Console**, copia el contenido completo de [schema.sql](./schema.sql), pégalo y pulsa **Execute** para crear las tablas.
-6. En Cloudflare, entra en **Workers & Pages → Create application → Import a repository** (el texto exacto puede variar). Conecta GitHub, elige **Juanan88/biblioteca-tdt**, rama \`main\`. El comando de despliegue es \`npx wrangler deploy\`. El proyecto no necesita compilar la web ni un servidor aparte.
+6. En Cloudflare, entra en **Workers & Pages → Create application → Import a repository** (el texto exacto puede variar). Conecta GitHub, elige **Juanan88/biblioteca-tdt**, rama `main`. El comando de despliegue es `npx wrangler deploy`. El proyecto no necesita compilar la web ni un servidor aparte.
 7. Abre el Worker creado, entra en **Settings → Variables and Secrets** y agrega como secretos (Secret, **no Text**):
-   - \`ADMIN_PASSWORD\`: contraseña única de al menos 16 caracteres, difícil de adivinar. No la envíes por ChatGPT ni la escribas en GitHub.
-   - \`ADMIN_SESSION_SECRET\`: secuencia aleatoria distinta, de al menos 32 caracteres. No la publiques.
-8. Verifica que la aplicación funciona en la dirección gratuita \`https://biblioteca-tdt.<tu-subdominio>.workers.dev\` que te muestre Cloudflare. No inventes el subdominio: utilízalo tal como aparezca en la consola.
+   - `ADMIN_PASSWORD`: contraseña única de al menos 16 caracteres, difícil de adivinar. No la envíes por ChatGPT ni la escribas en GitHub.
+   - `ADMIN_SESSION_SECRET`: secuencia aleatoria distinta, de al menos 32 caracteres. No la publiques.
+8. Verifica que la aplicación funciona en la dirección gratuita `https://biblioteca-tdt.<tu-subdominio>.workers.dev` que te muestre Cloudflare. No inventes el subdominio: utilízalo tal como aparezca en la consola.
 9. Prueba el catálogo vacío, da de alta un libro, préstalo y devuélvelo; prueba «No encuentro» y «Está en la estantería»; comprueba acceso administrativo y restauración. **Solo después** comparte el enlace con los vecinos.
 
 Si el Worker fue desplegado antes de configurar los secretos, las escrituras devuelven un mensaje de configuración hasta introducirlos. No es necesario almacenar contraseñas de vecinos.
@@ -63,25 +63,25 @@ Cloudflare explica el despliegue automático con GitHub en https://developers.cl
 ## Desarrollo local (opcional, no necesario para la puesta en marcha)
 Con Node.js instalado, solo si quieres programar localmente:
 
-\`\`\`bash
+```bash
 npm install
 cp .dev.vars.example .dev.vars
 # Rellenar .dev.vars (gitignored) con secretos solo locales
 npm run db:local
 npm run dev
-\`\`\`
+```
 
 Para publicar nuevas versiones, guardar cambios en GitHub disparará el despliegue automático si la integración está activa.
 
 ## Archivos principales
-- \`public/index.html\`, \`public/styles.css\`, \`public/app.js\`: interfaz.
-- \`src/worker.js\`: rutas API y administración.
-- \`src/core.js\`: validación de ISBN, fichas y alias.
-- \`schema.sql\`: tablas D1.
-- \`wrangler.jsonc\`: Worker, estáticos y conexión D1.
-- \`tests/core.test.js\`: pruebas unitarias; se ejecutan con \`npm test\` o \`node --test tests/core.test.js\`.
-- \`ESPECIFICACION.md\`: requisitos aprobados.
-- \`AGENTS.md\`: reglas para continuar desarrollando.
+- `public/index.html`, `public/styles.css`, `public/app.js`: interfaz.
+- `src/worker.js`: rutas API y administración.
+- `src/core.js`: validación de ISBN, fichas y alias.
+- `schema.sql`: tablas D1.
+- `wrangler.jsonc`: Worker, estáticos y conexión D1.
+- `tests/core.test.js`: pruebas unitarias; se ejecutan con `npm test` o `node --test tests/core.test.js`.
+- `ESPECIFICACION.md`: requisitos aprobados.
+- `AGENTS.md`: reglas para continuar desarrollando.
 
 ## Límites conocidos y siguientes tareas
 - No está desplegado ni probado todavía con una instancia D1 real; validar flujos completos tras enlazar Cloudflare.
