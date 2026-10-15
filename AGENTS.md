@@ -23,3 +23,6 @@ Lee primero [ESPECIFICACION.md](./ESPECIFICACION.md). Sus ocho decisiones son re
 - Implementar y ejecutar tests, lint y build cuando el entorno lo permita. Reportar explícitamente lo no comprobado.
 - Mantener una lista de variables de entorno necesarias en `.env.example` sin valores secretos.
 - Si hace falta crear un proyecto externo (Supabase, Vercel, dominio), preparar instrucciones concretas y detenerse en los puntos que requieran autorización o credenciales del propietario.
+
+## Presupuesto estricto (decisión del propietario)
+**COSTE 0 €**. Usar exclusivamente Cloudflare Workers Free + Static Assets, D1 Free, GitHub Free y Open Library; no proponer Supabase/Vercel de pago ni componentes que puedan facturar consumo. Las cuotas se pueden agotar: no habilitar upgrades automáticos. No exigir instalar Codex: continuar implementación directamente desde ChatGPT/GitHub y documentar los pasos de Cloudflare que deba realizar la persona titular.
