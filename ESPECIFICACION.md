@@ -71,11 +71,13 @@ El modelo puede variar si hay una simplificación mejor que preserve la gestión
 - Errores amigables en español, estados vacíos, indicadores de carga, manejo de APIs caídas, accesibilidad básica y tests de operaciones críticas.
 - Copias de seguridad/recuperación documentadas. Sin secretos en git ni en historial.
 
-## 7. Implementación técnica sugerida (no inamovible)
-- Next.js + TypeScript + Tailwind (o alternativa sencilla y bien justificada).
-- Supabase Postgres para persistencia; acceso desde código servidor mediante credenciales protegidas. Si la plataforma necesita configuración manual, documentar variables de entorno y pasos sin fingir que ya está configurada.
-- Vercel u otro hosting sencillo; sugerir nivel gratuito solo si los límites actuales lo permiten.
-- Open Library y Google Books para información bibliográfica, con fallback manual. Escaneo de ISBN por navegador solo cuando esté soportado.
+## 7. Implementación técnica obligatoria para presupuesto 0 €
+- Cloudflare Workers Free + Static Assets para web estática y API. Sin alojamientos de pago ni servicios que cobren al superar cuotas.
+- Cloudflare D1 Free (SQLite) para persistencia real. Acceso exclusivo desde el Worker, nunca desde frontend; los secretos se guardan en Cloudflare.
+- Open Library gratuita para metadatos por ISBN, con fallback manual. La cámara de lectura de ISBN solo cuando el navegador lo soporte.
+- Usar subdominio gratuito *.workers.dev, sin comprar dominio, sin pago ni tarjeta.
+- Al alcanzar cuotas de la capa gratuita, se prefiere detener temporalmente operaciones antes que producir un cargo.
+- Despliegue mediante integración GitHub ↔ Cloudflare desde el navegador; no exigir instalar Codex ni otras aplicaciones.
 - Repositorio GitHub independiente de Hoy Toca Plan.
 
 ## 8. No incluir en el MVP
@@ -98,3 +100,8 @@ Registro/login de vecinos, emails, notificaciones personales, reservas, multas, 
 - Identidad visual (usar diseño limpio y cálido por defecto).
 - Ubicación física/estanterías (campo opcional, no bloquear desarrollo).
 - Cantidad inicial de libros, reglas para conservación, dominio definitivo.
+
+## 11. Presupuesto (decisión posterior obligatoria)
+- **Coste de 0 € sin excepciones**. No integrar proveedores ni planes con facturación variable, SMS, correo de pago, dominios de pago, almacenamiento con cargos o APIs de IA de pago.
+- Cambios de precio o límites del proveedor requieren reevaluación antes de contratar nada. No asumir capacidades ilimitadas de planes gratuitos.
+- Implementación inicial alojada en Cloudflare Workers Free, base D1 Free, catálogo por Open Library y repositorio GitHub Free.
