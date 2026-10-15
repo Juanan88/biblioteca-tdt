@@ -1,0 +1,17 @@
+{
+  "name": "biblioteca-tdt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 execute biblioteca-tdt --local --file=./schema.sql",
+    "db:remote": "wrangler d1 execute biblioteca-tdt --remote --file=./schema.sql",
+    "test": "node --test tests/*.test.js",
+    "check": "node --check src/worker.js && node --check src/core.js && node --check public/app.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.43.0"
+  }
+}
