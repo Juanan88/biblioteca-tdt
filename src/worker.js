@@ -285,7 +285,7 @@ export default {
     }
     return fail("Ruta no encontrada.",404);
   } catch(err) {
-    if(err instanceof Error && (/^Introduce|^El ISBN|^Datos no|^La edad|^Envía|^JSON no|^La solicitud|^El autor|^La sinopsis|^El género|^La categoría|^La conservación|^La dirección|^Estado de un libro|^Hay un préstamo|^Identificador de libro/.test(err.message))) return fail(err.message);
+    if(err instanceof Error && (/^Introduce|^El ISBN|^Datos no|^La edad|^Envía|^JSON no|^La solicitud|^El autor|^La sinopsis|^El género|^La categoría|^La conservación|^La dirección|^La portada|^Estado de un libro|^Hay un préstamo|^Identificador de libro/.test(err.message))) return fail(err.message);
     console.error("Biblioteca API error:",err);
     return fail("No hemos podido completar la operación. Inténtalo de nuevo.",500);
   }
