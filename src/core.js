@@ -40,11 +40,12 @@ export function bookInput(input) {
   const rawCover = optionalText(input.cover_url,600,"La dirección de la portada");
   let cover_url = null;
   if (rawCover) {
-    try {
-      const parsed = new URL(rawCover);
-      const host = parsed.hostname.toLowerCase();
-      if (parsed.protocol === "https:" && ["covers.openlibrary.org", "books.google.com", "books.googleusercontent.com"].includes(host)) cover_url = parsed.href;
-    } catch { /* ignorar portada inválida */ }
+    let parsed;
+    try {parsed=new URL(rawCover);}catch {throw new Error("La dirección de la portada no es una URL válida.");}
+    const host=parsed.hostname.toLowerCase();
+    if(parsed.protocol!=="https:"||!["covers.openlibrary.org","books.google.com","books.googleusercontent.com"].includes(host))
+      throw new Error("La portada debe venir de Open Library o Google Books y usar HTTPS.");
+    cover_url=parsed.href;
   }
   return {
     isbn: code, title,
