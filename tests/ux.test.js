@@ -55,3 +55,13 @@ test("acceso administrativo discreto en el pie",()=>{
  assert.match(html,/id="top-admin" class="footer-admin"/);
  assert.doesNotMatch(html,/<nav[\s\S]*?id="top-admin"[\s\S]*?<\/nav>/);
 });
+
+test("el donante se muestra en tarjetas y puede omitirse en el formulario",()=>{
+ assert.match(js,/function donorName\(book\)/);
+ assert.match(js,/Donado por Anónimo/);
+ assert.match(js,/escapeHtml\(donorSummary\(items\)\)/);
+ assert.match(js,/id="donor_name"/);
+ assert.match(js,/Si lo dejas vacío, aparecerá «Anónimo»/);
+ assert.match(js,/donor_name:data\.donor_name/);
+ assert.match(css,/\.donor-label/);
+});
