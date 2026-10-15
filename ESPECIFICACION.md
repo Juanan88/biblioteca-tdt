@@ -72,8 +72,8 @@ El modelo puede variar si hay una simplificación mejor que preserve la gestión
 - Copias de seguridad/recuperación documentadas. Sin secretos en git ni en historial.
 
 ## 7. Implementación técnica obligatoria para presupuesto 0 €
-- Cloudflare Workers Free + Static Assets para web estática y API. Sin alojamientos de pago ni servicios que cobren al superar cuotas.
-- Cloudflare D1 Free (SQLite) para persistencia real. Acceso exclusivo desde el Worker, nunca desde frontend; los secretos se guardan en Cloudflare.
+- Cloudflare Pages Free + Pages Functions para web estática y API. Sin alojamientos de pago ni servicios que cobren al superar cuotas.
+- Cloudflare D1 Free (SQLite) para persistencia real. Acceso exclusivo desde el Worker, nunca desde frontend; los secretos se guardan en Cloudflare Pages (Production).
 - Open Library gratuita para metadatos por ISBN, con fallback manual. La cámara de lectura de ISBN solo cuando el navegador lo soporte.
 - Usar subdominio gratuito *.workers.dev, sin comprar dominio, sin pago ni tarjeta.
 - Al alcanzar cuotas de la capa gratuita, se prefiere detener temporalmente operaciones antes que producir un cargo.
@@ -104,4 +104,11 @@ Registro/login de vecinos, emails, notificaciones personales, reservas, multas, 
 ## 11. Presupuesto (decisión posterior obligatoria)
 - **Coste de 0 € sin excepciones**. No integrar proveedores ni planes con facturación variable, SMS, correo de pago, dominios de pago, almacenamiento con cargos o APIs de IA de pago.
 - Cambios de precio o límites del proveedor requieren reevaluación antes de contratar nada. No asumir capacidades ilimitadas de planes gratuitos.
-- Implementación inicial alojada en Cloudflare Workers Free, base D1 Free, catálogo por Open Library y repositorio GitHub Free.
+- Implementación inicial alojada en Cloudflare Pages Free (Functions), base D1 Free, catálogo por Open Library y repositorio GitHub Free.
+
+## 12. Publicación creada por el usuario (15/10/2026)
+- Proyecto de tipo **Cloudflare Pages** con URL indicada https://biblioteca-tdt.pages.dev/.
+- Se adaptó el repositorio para usar `functions/api/[[path]].js` y `pages_build_output_dir: ./public` en `wrangler.jsonc`.
+- Base D1 `biblioteca-tdt` (tablas creadas por el usuario); identificador configurado en el repositorio.
+- El usuario indica que configuró secretos; no es posible validarlos remotamente sin diagnóstico.
+- **Antes de uso real**, verificar `/api/health` y `/api/books`, y realizar pruebas end-to-end; el despliegue anterior Success no valida por sí solo el nuevo backend.
