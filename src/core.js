@@ -22,6 +22,14 @@ export function optionalText(value,limit,label){
  if(value.trim().length>limit)throw new Error(label+" supera "+limit+" caracteres.");
  return text(value,limit);
 }
+export function donorInput(value) {
+  if(value == null || (typeof value==="string" && !value.trim())) return "Anónimo";
+  if(typeof value!=="string") throw new Error("El donante no es válido.");
+  const name=value.trim().replace(/\s+/g," ");
+  if(name.length>40 || /[<>@]/.test(name) || /https?:\/\/|\b\d{7,}\b/i.test(name))
+    throw new Error("Pon solo un nombre o apodo para el donante (máximo 40 caracteres, sin datos de contacto).");
+  return name;
+}
 export function bookInput(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Datos no válidos.");
   const title = text(input.title, 200);
@@ -53,7 +61,7 @@ export function bookInput(input) {
     description: optionalText(input.description,1500,"La sinopsis"),
     cover_url,
     genre: optionalText(input.genre,60,"El género"),
-    audience, min_age: age, condition
+    audience, min_age: age, condition, donor_name: donorInput(input.donor_name)
   };
 }
 export function aliasInput(value) {
