@@ -46,6 +46,7 @@ function regroup(){
 }
 function render(){
   regroup();
+  document.querySelectorAll(".quick-filters button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.filter===state.filter)));
   $("#count-all").textContent=state.books.length;
   $("#count-free").textContent=state.books.filter(b=>b.status==="available").length;
   $("#count-borrowed").textContent=state.books.filter(b=>b.status==="borrowed").length;
@@ -67,7 +68,7 @@ function render(){
     const cover=book.cover_url ? '<img src="'+escapeHtml(book.cover_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer">'
       : '<div class="cover-placeholder" aria-hidden="true">✦</div>';
     return '<button class="book-card" data-action="view" data-key="'+escapeHtml(encodeURIComponent(key))+'" aria-label="Ver '+escapeHtml(book.title)+'">'+
-      '<div class="cover-area">'+cover+'</div><div class="book-info">'+pill(status)+
+      '<div class="cover-area">'+cover+(book.min_age!=null?'<span class="age-tag">+'+Number(book.min_age)+' años</span>':"")+'</div><div class="book-info">'+pill(status)+
       '<h3>'+escapeHtml(book.title)+'</h3><p class="author">'+escapeHtml(book.author||"Autor no indicado")+'</p>'+
       '<div class="bottom"><span>'+ (items.length>1 ? items.length+" ejemplares" : escapeHtml(book.audience||"Para todos"))+'</span><span>Ver libro →</span></div></div></button>';
   }).join("");
@@ -108,7 +109,7 @@ function bookForm(book=null){
     '<p class="dialog-body">'+(editing?"Puedes corregir los datos del catálogo. Los préstamos no cambian.":"Solo es necesario identificar el libro y confirmar que ya está en la biblioteca.")+'</p>'+
     '<form id="book-form" '+(editing?'data-edit="'+escapeHtml(book.id)+'"':"")+'>'+
     '<div class="field"><label for="isbn">ISBN (opcional)</label><div class="actions" style="margin:0"><input id="isbn" name="isbn" inputmode="numeric" placeholder="ISBN del libro" value="'+val("isbn")+'" style="flex:1;min-width:140px"><button type="button" class="button outline" data-action="lookup">Buscar datos</button><button type="button" class="button outline" data-action="scan">📷 Escanear</button></div><span id="isbn-message" class="tiny">También puedes escribir el título directamente.</span></div>'+
-    '<div id="camera-region"></div>'+
+    '<div id="camera-region"></div><div id="cover-preview" aria-live="polite"></div>'+
     '<div class="field"><label for="title">Título *</label><input name="title" id="title" maxlength="200" required value="'+val("title")+'"></div>'+
     '<div class="field"><label for="author">Autor</label><input name="author" id="author" maxlength="160" value="'+val("author")+'"></div>'+
     '<div class="row-fields"><div class="field"><label for="audience">Categoría</label><select id="audience" name="audience"><option value="">Sin especificar</option>'+["infantil","juvenil","adultos"].map(a=>'<option value="'+a+'" '+(book?.audience===a?"selected":"")+'>'+a[0].toUpperCase()+a.slice(1)+'</option>').join("")+'</select></div>'+
@@ -119,6 +120,7 @@ function bookForm(book=null){
     (editing?'':'<label class="dialog-body" style="display:flex;align-items:center;gap:10px"><input type="checkbox" required style="width:18px;height:18px"> Confirmo que ya he dejado este libro en la biblioteca.</label><p id="duplicate" class="notice" hidden></p>')+
     '<div class="actions"><button class="button primary" type="submit">'+(editing?"Guardar cambios":"Añadir a la biblioteca")+'</button></div></form>'));
   if(!editing)$("#isbn").addEventListener("input",checkDuplicate);
+  if(book?.cover_url)showCover(book.cover_url);
 }
 function checkDuplicate(){
   const code=$("#isbn")?.value.replace(/[- ]/g,"")||"";
@@ -128,18 +130,44 @@ function checkDuplicate(){
   el.hidden=!same.length;
   if(same.length)el.textContent="Ya hay "+same.length+" ejemplar(es) de este ISBN. Puedes añadir otro si también lo has dejado en la estantería.";
 }
+function showCover(url) {
+ const box=$("#cover-preview");if(!box)return;
+ if(!url){box.innerHTML="";return;}
+ // El backend solo admite enlaces HTTPS procedentes de catálogos bibliográficos conocidos.
+ try {const parsed=new URL(url);
+   if(parsed.protocol!=="https:"||!["covers.openlibrary.org","books.google.com","books.googleusercontent.com"].includes(parsed.hostname))return;
+   box.innerHTML='<div class="book-cover-preview"><img src="'+escapeHtml(parsed.href)+'" alt="Portada recuperada" loading="lazy"><p>Portada encontrada automáticamente. Se guardará con el libro.</p></div>';
+ }catch{}
+}
 async function lookup(){
  const code=$("#isbn")?.value.trim();
  const message=$("#isbn-message");if(!code){message.textContent="Introduce un ISBN para buscarlo.";return;}
- message.textContent="Buscando información…";
+ message.textContent="Buscando información en los catálogos gratuitos…";
+ const btnLookup=document.querySelector('[data-action="lookup"]');
+ if(btnLookup)btnLookup.disabled=true;
  try{
   const result=await api("/api/isbn?code="+encodeURIComponent(code));
-  if(!result.book){message.textContent=result.warning||"No hay datos de este ISBN. Completa el título manualmente.";return;}
+  if(!result.book){message.textContent=result.warning||"No se han encontrado datos. Puedes escribir el título manualmente.";return;}
+  const book=result.book;
+  let filled=0;
   for(const field of ["title","author","description","cover_url","genre"]){
-    if(result.book[field] && document.getElementById(field))document.getElementById(field).value=result.book[field];
+    const element=document.getElementById(field);
+    if(book[field] && element){element.value=book[field];filled++;}
   }
-  message.textContent="Datos recuperados. Puedes corregirlos antes de guardar.";checkDuplicate();
+  const audience=$("#audience");
+  if(audience && book.audience && ["infantil","juvenil","adultos"].includes(book.audience)){audience.value=book.audience;filled++;}
+  const age=$("#age");
+  if(age && book.min_age!=="" && book.min_age!=null && Number.isInteger(Number(book.min_age))){age.value=book.min_age;filled++;}
+  showCover(book.cover_url);
+  const notFound=["description","genre","cover_url"].filter(k=>!book[k]);
+  const ageUnknown=(book.min_age==null || book.min_age==="");
+  message.textContent="✓ "+filled+" datos completados automáticamente."+
+    (notFound.length?" Algunos campos no figuran en los catálogos.":"")+
+    (ageUnknown?" La edad recomendada no consta de forma fiable; puedes indicarla o dejarla vacía.":"")+
+    " Revisa la ficha antes de guardarla.";
+  checkDuplicate();
  }catch(err){message.textContent=err.message;}
+ finally{if(btnLookup)btnLookup.disabled=false;}
 }
 async function scan(){
  const field=$("#isbn-message"),region=$("#camera-region");
@@ -215,6 +243,7 @@ document.addEventListener("click",async(event)=>{
  if(!b)return;
  const action=b.dataset.action,id=b.dataset.id;
  if(action==="close")return close();
+ if(action==="quick-filter"){$("#filter").value=b.dataset.filter;state.filter=b.dataset.filter;render();document.querySelector("#catalogo")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
  if(action==="reload")return refresh();
  if(action==="view")return detail(decodeURIComponent(b.dataset.key));
  if(action==="borrow"||action==="return"||action==="missing"||action==="found")return move(action,id);
