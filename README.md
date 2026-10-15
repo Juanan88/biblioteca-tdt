@@ -1,5 +1,7 @@
 # Biblioteca TDT
 
+> **Actualización UX (15/10/2026):** Se ha reducido a **un único botón «+ Donar un libro»** en la cabecera, eliminado los filtros duplicados y simplificado el formulario de donación. Mientras no existan libros reales, el catálogo muestra **tres libros de ejemplo señalados claramente como «EJEMPLO»**, con portadas ilustrativas creadas con CSS. No se guardan en D1 y desaparecen con el primer libro real. Consulta [AUDITORIA_UX.md](./AUDITORIA_UX.md).
+
 Biblioteca vecinal colaborativa. **Sin registro de usuarios, sin QR individuales y con coste obligatorio de 0 €**. Proyecto completamente independiente de Hoy Toca Plan.
 
 ## Estado del proyecto · 15 octubre 2026
@@ -99,3 +101,14 @@ Para desplegar manualmente con el CLI desde una sesión autenticada (no obligato
 - Las acciones anónimas se basan en confianza vecinal y pueden ser incorrectas; existe el estado «Por comprobar» para corregirlas.
 - Es recomendable hacer pruebas de concurrencia y gestionar copias de seguridad antes de uso real.
 - El repositorio se detectó como público: se recomienda cambiarlo a privado en GitHub, sin alterar la web pública.
+
+## Solucionar «Falta configurar los secretos»
+
+Si `/api/books` devuelve correctamente el catálogo pero las altas fallan con ese error, el enlace D1 funciona y falta ajustar la configuración de variables del backend.
+
+1. Abre **Cloudflare Dashboard → Workers & Pages → biblioteca-tdt (proyecto Pages) → Settings → Variables and Secrets** y selecciona **Production**.
+2. Crea o actualiza exactamente **`ADMIN_PASSWORD`** (mínimo 16 caracteres) y **`ADMIN_SESSION_SECRET`** (mínimo 32 caracteres), eligiendo **Secret / Encrypt**, sin espacios en los nombres. No copies valores al chat o GitHub.
+3. Guarda los cambios. Comprueba en **Deployments** que se crea un despliegue **Production** nuevo *después* de haber guardado los secretos. Si no, inicia uno nuevo desde la interfaz de Pages.
+4. Abre https://biblioteca-tdt.pages.dev/api/health y comprueba `"configured":true`. Si continúa `false`, revisa nombres y longitudes de secretos del entorno Production.
+
+Guía oficial: https://developers.cloudflare.com/pages/functions/bindings/
