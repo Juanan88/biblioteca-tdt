@@ -25,4 +25,7 @@ Lee primero [ESPECIFICACION.md](./ESPECIFICACION.md). Sus ocho decisiones son re
 - Si hace falta crear un proyecto externo (Supabase, Vercel, dominio), preparar instrucciones concretas y detenerse en los puntos que requieran autorización o credenciales del propietario.
 
 ## Presupuesto estricto (decisión del propietario)
-**COSTE 0 €**. Usar exclusivamente Cloudflare Workers Free + Static Assets, D1 Free, GitHub Free y Open Library; no proponer Supabase/Vercel de pago ni componentes que puedan facturar consumo. Las cuotas se pueden agotar: no habilitar upgrades automáticos. No exigir instalar Codex: continuar implementación directamente desde ChatGPT/GitHub y documentar los pasos de Cloudflare que deba realizar la persona titular.
+**COSTE 0 €**. Usar exclusivamente Cloudflare Pages Free + Pages Functions, D1 Free, GitHub Free y Open Library; no proponer Supabase/Vercel de pago ni componentes que puedan facturar consumo. Las cuotas se pueden agotar: no habilitar upgrades automáticos. No exigir instalar Codex: continuar implementación directamente desde ChatGPT/GitHub y documentar los pasos de Cloudflare que deba realizar la persona titular.
+
+## Despliegue real del usuario
+El proyecto que el usuario ha creado es **Cloudflare Pages** (no un Worker independiente), en `https://biblioteca-tdt.pages.dev/`. Usa `functions/api/[[path]].js` para las rutas API, `src/worker.js` como lógica compartida, `pages_build_output_dir: ./public`, y D1 binding `DB`. No recomendar borrar ni recrear Pages ni pedir subdominio workers.dev. Validar logs del último despliegue y la ruta `/api/health`.
