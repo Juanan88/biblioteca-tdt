@@ -1,5 +1,6 @@
 import { text, isbn, bookInput, aliasInput } from "./core.js";
 import { fromLegacy, fromEdition, fromWork, fromGoogle, mergeBookData } from "./metadata.js";
+import { ensureHistory } from "./history.js";
 
 function reply(data, status = 200, extra = {}) {
   return Response.json(data, {status, headers:{
@@ -15,10 +16,10 @@ function sameOrigin(request) {
   const origin = request.headers.get("Origin");
   return !origin || origin === new URL(request.url).origin;
 }
-async function bodyOf(request) {
+async function bodyOf(request, maxLength=12000) {
   if (!(request.headers.get("content-type") || "").includes("application/json")) throw new Error("Envía los datos en formato JSON.");
   const raw = await request.text();
-  if (raw.length > 12000) throw new Error("La solicitud es demasiado grande.");
+  if (raw.length > maxLength) throw new Error("La solicitud es demasiado grande.");
   let data;
   try { data = JSON.parse(raw); } catch { throw new Error("JSON no válido."); }
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Datos no válidos.");
@@ -51,7 +52,14 @@ async function isAdmin(request, env) {
   if (!match || Number(match[1]) < Date.now() || Number(match[1]) > Date.now()+86400000) return false;
   return fixedCompare(match[2],await signed(match[1],env.ADMIN_SESSION_SECRET));
 }
+let lastCleanupHour="";
 async function rateLimit(request, env, action, max=45) {
+ // Purga oportunista: no necesita Cron, no guarda direcciones IP y limita el crecimiento de D1.
+ const currentHour=new Date().toISOString().slice(0,13);
+ if(lastCleanupHour!==currentHour){
+  try{await env.DB.prepare("DELETE FROM rate_limits WHERE hour_bucket < ?").bind(new Date(Date.now()-48*3600000).toISOString().slice(0,13)).run();lastCleanupHour=currentHour;}
+  catch(error){console.warn("No se pudo limpiar rate_limits",error);}
+ }
   const ip=request.headers.get("CF-Connecting-IP") || "unknown";
   const identity=await sha(env.ADMIN_SESSION_SECRET + ":" + ip);
   const hour=new Date().toISOString().slice(0,13);
@@ -129,6 +137,7 @@ export default {
       catch{return reply({book:null,warning:"No se han podido recuperar datos. Puedes introducir el libro manualmente."});}
     }
     if(method==="POST" && path==="/api/books") {
+      await ensureHistory(env.DB);
       if(!await rateLimit(request,env,"add",30)) return fail("Demasiadas altas desde esta conexión.",429);
       const input=bookInput(await bodyOf(request));
       const id=crypto.randomUUID();
@@ -140,6 +149,7 @@ export default {
     }
     const match=idRegex.exec(path);
     if(match && method==="PATCH" && !match[2]) {
+      await ensureHistory(env.DB);
       if(!await rateLimit(request,env,"edit",45)) return fail("Demasiadas modificaciones.",429);
       const input=bookInput(await bodyOf(request));
       const result=await env.DB.prepare("UPDATE books SET isbn=?,title=?,author=?,description=?,cover_url=?,genre=?,audience=?,min_age=?,condition=?,updated_at=datetime('now') WHERE id=? AND removed_at IS NULL")
@@ -149,6 +159,7 @@ export default {
       return reply({ok:true});
     }
     if(match && method==="POST" && match[2]) {
+      await ensureHistory(env.DB);
       const [ ,id,action]=match;
       if(!await rateLimit(request,env,"movement",55)) return fail("Demasiados movimientos.",429);
       let statement,values,event;
@@ -164,7 +175,7 @@ export default {
         statement="UPDATE books SET status='review',updated_at=datetime('now') WHERE id=? AND removed_at IS NULL AND status='available'";
         values=[id]; event="no_encontrado";
       } else {
-        statement="UPDATE books SET status='available',borrower_alias=NULL,borrowed_at=NULL,updated_at=datetime('now') WHERE id=? AND removed_at IS NULL AND status!='available'";
+        statement="UPDATE books SET status='available',borrower_alias=NULL,borrowed_at=NULL,updated_at=datetime('now') WHERE id=? AND removed_at IS NULL AND status='review'";
         values=[id]; event="en_estanteria";
       }
       const result=await env.DB.prepare(statement).bind(...values).run();
@@ -193,12 +204,78 @@ export default {
         const {results}=await env.DB.prepare("SELECT events.action,events.occurred_at,books.title FROM events LEFT JOIN books ON books.id=events.book_id ORDER BY events.id DESC LIMIT 80").all();
         return reply({events:results});
       }
+      if(method==="GET" && path==="/api/admin/backup") {
+        await ensureHistory(env.DB);
+        const {results:books}=await env.DB.prepare(bookSelect.replace(" FROM books",",removed_at FROM books")+" ORDER BY created_at,id LIMIT 10001").all();
+        if(books.length>10000)return fail("La biblioteca es demasiado grande para una copia única. Contacta con administración.",413);
+        const {results:revisions}=await env.DB.prepare("SELECT id,book_id,before_json,after_json,changed_at FROM book_revisions ORDER BY id LIMIT 30001").all();
+        if(revisions.length>30000)return fail("Hay demasiadas revisiones para exportarlas de una vez.",413);
+        const {results:events}=await env.DB.prepare("SELECT id,book_id,action,occurred_at FROM events ORDER BY id LIMIT 30001").all();
+        if(events.length>30000)return fail("Hay demasiados eventos para exportarlos de una vez.",413);
+        return reply({format:"biblioteca-tdt",version:1,exported_at:new Date().toISOString(),books,revisions,events,
+          note:"La copia incluye los alias de los préstamos activos: guárdala solo en un lugar privado."},200,{"Content-Disposition":'attachment; filename="biblioteca-tdt-backup.json"'});
+      }
+      if(method==="POST" && path==="/api/admin/backup/restore") {
+        if(!await rateLimit(request,env,"admin_restore",5))return fail("Demasiados intentos de recuperación.",429);
+        const data=await bodyOf(request,4000000);
+        if(data.confirmation!=="RESTAURAR"||data.backup?.format!=="biblioteca-tdt"||data.backup?.version!==1||!Array.isArray(data.backup.books)||data.backup.books.length>5000)
+          return fail("Copia no válida o falta confirmación RESTAURAR.");
+        await ensureHistory(env.DB);
+        const existing=new Set();
+        const statements=[];
+        for(const original of data.backup.books){
+          if(!original||typeof original.id!=="string"||!/^[0-9a-f-]{36}$/.test(original.id)||existing.has(original.id))return fail("La copia contiene identificadores inválidos o repetidos.");
+          existing.add(original.id);
+          const b=bookInput(original);
+          if(!["available","borrowed","review"].includes(original.status))return fail("Estado de un libro inválido.");
+          const borrowed=original.status==="borrowed";
+          if(borrowed && (typeof original.borrower_alias!=="string"||!original.borrower_alias.trim()||typeof original.borrowed_at!=="string"))return fail("Hay un préstamo incompleto en la copia.");
+          const date=(x)=>typeof x==="string" && /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/.test(x) ? x : null;
+          statements.push(env.DB.prepare(
+           "INSERT OR IGNORE INTO books(id,isbn,title,author,description,cover_url,genre,audience,min_age,condition,status,borrower_alias,borrowed_at,created_at,updated_at,removed_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+          ).bind(original.id,b.isbn,b.title,b.author,b.description,b.cover_url,b.genre,b.audience,b.min_age,b.condition,original.status,
+           borrowed?original.borrower_alias:null,borrowed?date(original.borrowed_at):null,
+           date(original.created_at)||new Date().toISOString().slice(0,19).replace("T"," "),
+           date(original.updated_at)||new Date().toISOString().slice(0,19).replace("T"," "),date(original.removed_at)));
+        }
+        // Los datos existentes nunca se sobrescriben; se recuperan solo libros que faltan.
+        let inserted=0;
+        for(let i=0;i<statements.length;i+=80){
+          const result=await env.DB.batch(statements.slice(i,i+80));
+          inserted+=result.reduce((count,x)=>count+Number(x.meta?.changes||0),0);
+        }
+        return reply({ok:true,added:inserted,skipped:statements.length-inserted,
+         note:"Se han recuperado los libros ausentes sin modificar los existentes. Historial antiguo y eventos siguen en el archivo descargado."});
+      }
+      if(method==="GET" && path==="/api/admin/revisions") {
+        await ensureHistory(env.DB);
+        const bookId=url.searchParams.get("book_id");
+        if(!bookId||!/^[0-9a-f-]{36}$/.test(bookId))return fail("Identificador de libro incorrecto.");
+        const {results}=await env.DB.prepare("SELECT id,book_id,before_json,after_json,changed_at FROM book_revisions WHERE book_id=? ORDER BY id DESC LIMIT 100").bind(bookId).all();
+        return reply({revisions:results.map(row=>({...row,before:JSON.parse(row.before_json),after:JSON.parse(row.after_json),before_json:undefined,after_json:undefined}))});
+      }
+      const revisionRestore=/^\/api\/admin\/revisions\/(\d+)\/restore$/.exec(path);
+      if(method==="POST" && revisionRestore){
+        if(!await rateLimit(request,env,"admin_revert",25))return fail("Demasiadas recuperaciones.",429);
+        await ensureHistory(env.DB);
+        const row=await env.DB.prepare("SELECT book_id,before_json FROM book_revisions WHERE id=?").bind(Number(revisionRestore[1])).first();
+        if(!row)return fail("Versión no encontrada.",404);
+        const old=bookInput(JSON.parse(row.before_json));
+        // Solo metadatos: nunca alterar un préstamo actual ni resucitar libros retirados.
+        const result=await env.DB.prepare(
+          "UPDATE books SET isbn=?,title=?,author=?,description=?,cover_url=?,genre=?,audience=?,min_age=?,condition=?,updated_at=datetime('now') WHERE id=? AND removed_at IS NULL"
+        ).bind(old.isbn,old.title,old.author,old.description,old.cover_url,old.genre,old.audience,old.min_age,old.condition,row.book_id).run();
+        if(!result.meta.changes)return fail("El libro está retirado o ya no existe.",409);
+        await log(env.DB,row.book_id,"restaurar_ficha");
+        return reply({ok:true});
+      }
       const adminMatch=adminBookRegex.exec(path);
       if(adminMatch && method==="POST") {
+        await ensureHistory(env.DB);
         if(!await rateLimit(request,env,"admin_change",45)) return fail("Demasiadas modificaciones.",429);
         const removed=adminMatch[2]==="remove";
         const sql=removed
-          ? "UPDATE books SET removed_at=datetime('now'),borrower_alias=NULL,borrowed_at=NULL,status='available',updated_at=datetime('now') WHERE id=? AND removed_at IS NULL"
+          ? "UPDATE books SET removed_at=datetime('now'),updated_at=datetime('now') WHERE id=? AND removed_at IS NULL"
           : "UPDATE books SET removed_at=NULL,updated_at=datetime('now') WHERE id=? AND removed_at IS NOT NULL";
         const result=await env.DB.prepare(sql).bind(adminMatch[1]).run();
         if(!result.meta.changes) return fail("Este libro ya ha cambiado.",409);
