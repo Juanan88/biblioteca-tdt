@@ -1,4 +1,21 @@
 const state = {books:[],groups:new Map(),query:"",filter:"all",stream:null,scanStop:false};
+const demoBooks = [
+  {title:"El monstruo de colores",author:"Anna Llenas",audience:"infantil",min_age:3,genre:"Emociones",status:"available",color:"colors",symbol:"🎨",coverTitle:"EL MONSTRUO<br>DE COLORES"},
+  {title:"¿A qué sabe la luna?",author:"Michael Grejniec",audience:"infantil",min_age:3,genre:"Animales",status:"borrowed",color:"moon",symbol:"🌙",coverTitle:"¿A QUÉ SABE<br>LA LUNA?"},
+  {title:"Matilda",author:"Roald Dahl",audience:"infantil",min_age:8,genre:"Fantasía",status:"review",color:"magic",symbol:"✨",coverTitle:"MATILDA"}
+];
+function demoCatalog(query,filter){
+ const filtered=demoBooks.filter(b=>(!query||clean([b.title,b.author,b.genre].join(" ")).includes(query))&&
+  (filter==="all"||(filter==="available"?b.status==="available":b.audience===filter)));
+ if(!filtered.length)return '<div class="empty"><strong>No hay ejemplos con esos filtros</strong><p>Prueba otra búsqueda o pulsa «Todos».</p><button class="button outline" data-action="clear-filters">Quitar filtros</button></div>';
+ return '<div class="demo-intro"><span class="demo-intro-icon" aria-hidden="true">✦</span><div><strong>Así se verá nuestra biblioteca</strong><p>Estos 3 libros son solo ejemplos visuales, no están registrados ni disponibles para préstamo. Desaparecerán cuando se añada el primer libro real.</p></div></div>'+
+ filtered.map(b=>'<article class="book-card sample-card" aria-label="Ejemplo: '+escapeHtml(b.title)+'">'+
+ '<div class="cover-area"><div class="demo-book-cover demo-'+b.color+'"><span class="demo-cover-symbol" aria-hidden="true">'+b.symbol+'</span><strong>'+b.coverTitle+'</strong><small>'+escapeHtml(b.author)+'</small></div>'+
+ '<span class="demo-sticker">EJEMPLO</span><span class="age-tag">+'+b.min_age+' años</span></div>'+
+ '<div class="book-info">'+pill(b.status)+'<h3>'+escapeHtml(b.title)+'</h3><p class="author">'+escapeHtml(b.author)+'</p>'+
+ '<div class="bottom"><span>'+escapeHtml(b.genre)+'</span><span>Vista previa</span></div></div></article>').join("");
+}
+
 const $ = (s) => document.querySelector(s);
 const modal = $("#modal"), content = $("#modal-content");
 const escapeHtml = (v) => String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -51,6 +68,10 @@ function render(){
   $("#count-free").textContent=state.books.filter(b=>b.status==="available").length;
   $("#count-borrowed").textContent=state.books.filter(b=>b.status==="borrowed").length;
   let groups=[...state.groups.entries()];
+  if(state.books.length===0){
+    $("#books").innerHTML=demoCatalog(clean(state.query),state.filter);
+    return;
+  }
   const filter=state.filter, query=clean(state.query);
   groups=groups.filter(([key,items])=>{
     const book=items[0];
@@ -59,7 +80,7 @@ function render(){
     return (!query||search.includes(query)) && (filter==="all" || (filter==="available" ? hasFree : book.audience===filter));
   });
   if(!groups.length){
-    $("#books").innerHTML='<div class="empty"><div style="font-size:35px">📚</div><strong>No hay libros con esos filtros</strong><p>Prueba otra búsqueda o dona el primero.</p></div>';
+    $("#books").innerHTML='<div class="empty"><div style="font-size:35px">📚</div><strong>No hay libros con esos filtros</strong><p>Prueba otra búsqueda o elimina los filtros.</p><button class="button outline" data-action="clear-filters">Quitar filtros</button></div>';
     return;
   }
   $("#books").innerHTML=groups.map(([key,items])=>{
@@ -112,10 +133,10 @@ function bookForm(book=null){
     '<div id="camera-region"></div><div id="cover-preview" aria-live="polite"></div>'+
     '<div class="field"><label for="title">Título *</label><input name="title" id="title" maxlength="200" required value="'+val("title")+'"></div>'+
     '<div class="field"><label for="author">Autor</label><input name="author" id="author" maxlength="160" value="'+val("author")+'"></div>'+
-    '<div class="row-fields"><div class="field"><label for="audience">Categoría</label><select id="audience" name="audience"><option value="">Sin especificar</option>'+["infantil","juvenil","adultos"].map(a=>'<option value="'+a+'" '+(book?.audience===a?"selected":"")+'>'+a[0].toUpperCase()+a.slice(1)+'</option>').join("")+'</select></div>'+
+    '<details class="book-extras" id="extra-book-data" '+(editing?'open':'')+'><summary>Más datos del libro (opcionales)</summary><p class="tiny">Género, edad, conservación y sinopsis: puedes dejarlos vacíos.</p><div class="row-fields"><div class="field"><label for="audience">Categoría</label><select id="audience" name="audience"><option value="">Sin especificar</option>'+["infantil","juvenil","adultos"].map(a=>'<option value="'+a+'" '+(book?.audience===a?"selected":"")+'>'+a[0].toUpperCase()+a.slice(1)+'</option>').join("")+'</select></div>'+
     '<div class="field"><label for="age">Edad mínima orientativa</label><input id="age" name="min_age" type="number" min="0" max="120" placeholder="Opcional" value="'+val("min_age")+'"></div></div>'+
     '<div class="row-fields"><div class="field"><label for="genre">Género</label><input name="genre" id="genre" maxlength="60" value="'+val("genre")+'"></div><div class="field"><label for="condition">Conservación</label><select name="condition" id="condition"><option value="">Sin especificar</option>'+["nuevo","bueno","aceptable","deteriorado"].map(a=>'<option value="'+a+'" '+(book?.condition===a?"selected":"")+'>'+a[0].toUpperCase()+a.slice(1)+'</option>').join("")+'</select></div></div>'+
-    '<div class="field"><label for="description">Sinopsis (opcional)</label><textarea id="description" maxlength="1500" name="description">'+escapeHtml(book?.description||"")+'</textarea></div>'+
+    '<div class="field"><label for="description">Sinopsis (opcional)</label><textarea id="description" maxlength="1500" name="description">'+escapeHtml(book?.description||"")+'</textarea></div></details>'+
     '<input type="hidden" name="cover_url" id="cover_url" value="'+val("cover_url")+'">'+
     (editing?'':'<label class="dialog-body" style="display:flex;align-items:center;gap:10px"><input type="checkbox" required style="width:18px;height:18px"> Confirmo que ya he dejado este libro en la biblioteca.</label><p id="duplicate" class="notice" hidden></p>')+
     '<div class="actions"><button class="button primary" type="submit">'+(editing?"Guardar cambios":"Añadir a la biblioteca")+'</button></div></form>'));
@@ -159,6 +180,7 @@ async function lookup(){
   const age=$("#age");
   if(age && book.min_age!=="" && book.min_age!=null && Number.isInteger(Number(book.min_age))){age.value=book.min_age;filled++;}
   showCover(book.cover_url);
+  const extras=$("#extra-book-data");if(extras && (book.genre || book.audience || book.description || book.min_age!==""))extras.open=true;
   const notFound=["description","genre","cover_url"].filter(k=>!book[k]);
   const ageUnknown=(book.min_age==null || book.min_age==="");
   message.textContent="✓ "+filled+" datos completados automáticamente."+
@@ -243,7 +265,8 @@ document.addEventListener("click",async(event)=>{
  if(!b)return;
  const action=b.dataset.action,id=b.dataset.id;
  if(action==="close")return close();
- if(action==="quick-filter"){$("#filter").value=b.dataset.filter;state.filter=b.dataset.filter;render();document.querySelector("#catalogo")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
+ if(action==="quick-filter"){state.filter=b.dataset.filter;render();document.querySelector("#catalogo")?.scrollIntoView({behavior:"smooth",block:"start"});return;}
+ if(action==="clear-filters"){state.filter="all";state.query="";$("#search").value="";render();return;}
  if(action==="reload")return refresh();
  if(action==="view")return detail(decodeURIComponent(b.dataset.key));
  if(action==="borrow"||action==="return"||action==="missing"||action==="found")return move(action,id);
@@ -270,8 +293,7 @@ document.addEventListener("submit",async(event)=>{
  }catch(err){alert(err.message);}
  finally{if(submit)submit.disabled=false;}
 });
-for(const id of ["top-add","hero-add","inline-add"])$("#"+id).addEventListener("click",()=>bookForm());
+$("#top-add").addEventListener("click",()=>bookForm());
 $("#top-admin").addEventListener("click",admin);
 $("#search").addEventListener("input",(event)=>{state.query=event.target.value;render();});
-$("#filter").addEventListener("change",(event)=>{state.filter=event.target.value;render();});
 refresh();
