@@ -26,32 +26,43 @@ const due = (date) => date && Date.now()-Date.parse(String(date).replace(" ","T"
 const pill = (status) => status==="available" ? '<span class="chip">● Disponible</span>' : status==="borrowed" ? '<span class="chip borrowed">● Prestado</span>' : '<span class="chip review">● Por comprobar</span>';
 const btn = (text,action,id,style="outline") => '<button class="button '+style+'" data-action="'+action+'" data-id="'+escapeHtml(id)+'">'+text+'</button>';
 
-function coverURL(book){
+function isbnCoverURL(book){
  const isbn=String(book.isbn||"").replace(/[\s-]/g,"");
+ return /^(?:\d{10}|\d{13})$/.test(isbn)
+  ? "https://covers.openlibrary.org/b/isbn/"+isbn+"-M.jpg?default=false"
+  : "";
+}
+function coverURL(book){
  if(typeof book.cover_url==="string" && book.cover_url){
   try{const url=new URL(book.cover_url);
    if(url.protocol==="https:" && ["covers.openlibrary.org","books.google.com","books.googleusercontent.com"].includes(url.hostname.toLowerCase()))return url.href;
   }catch{}
  }
- if(/^(?:\d{10}|\d{13})$/.test(isbn))return "https://covers.openlibrary.org/b/isbn/"+isbn+"-M.jpg?default=false";
- return "";
+ return isbnCoverURL(book);
 }
 function coverHTML(book,demo=false){
- const fallback=demo
-  ? '<div class="demo-book-cover demo-'+escapeHtml(book.color)+'"'+(coverURL(book)?' hidden':'')+'><span class="demo-cover-symbol" aria-hidden="true">'+escapeHtml(book.symbol)+'</span><strong>'+book.coverTitle+'</strong><small>'+escapeHtml(book.author)+'</small></div>'
-  : '<div class="cover-placeholder" aria-hidden="true"'+(coverURL(book)?' hidden':'')+'>✦</div>';
  const url=coverURL(book);
- return (url?'<img class="book-cover-image" src="'+escapeHtml(url)+'" alt="Portada de '+escapeHtml(book.title)+'" loading="lazy" referrerpolicy="no-referrer">':"")+fallback;
+ const alternative=isbnCoverURL(book);
+ const fallback=demo
+  ? '<div class="demo-book-cover demo-'+escapeHtml(book.color)+'"'+(url?' hidden':'')+'><span class="demo-cover-symbol" aria-hidden="true">'+escapeHtml(book.symbol)+'</span><strong>'+book.coverTitle+'</strong><small>'+escapeHtml(book.author)+'</small></div>'
+  : '<div class="cover-placeholder" aria-hidden="true"'+(url?' hidden':'')+'>✦</div>';
+ const backup=(url&&alternative&&url!==alternative)?' data-backup-src="'+escapeHtml(alternative)+'"':"";
+ return (url?'<img class="book-cover-image" src="'+escapeHtml(url)+'"'+backup+' alt="Portada de '+escapeHtml(book.title)+'" loading="lazy" referrerpolicy="no-referrer">':"")+fallback;
 }
 document.addEventListener("error",(event)=>{
  const img=event.target;
  if(img instanceof HTMLImageElement && img.classList.contains("book-cover-image")){
+  if(img.dataset.backupSrc){
+   const retry=img.dataset.backupSrc;
+   delete img.dataset.backupSrc;
+   img.src=retry;
+   return;
+  }
   img.hidden=true;
   const fallback=img.nextElementSibling;
   if(fallback)fallback.hidden=false;
  }
 },true);
-
 function stopCamera(){
   state.scanStop=true;
   if(state.stream){state.stream.getTracks().forEach(t=>t.stop());state.stream=null;}
