@@ -1,0 +1,20 @@
+name: Biblioteca TDT · Pruebas
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validar código
+        run: npm run check
+      - name: Pruebas unitarias e integración SQLite
+        run: npm test
