@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#194d43">
+  <meta name="description" content="Catálogo colaborativo de libros para nuestra comunidad de vecinos.">
+  <title>Biblioteca TDT · Libros para compartir</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Biblioteca TDT, inicio"><span class="brand-symbol">▤</span><span>Biblioteca <strong>TDT</strong><small>Libros que conectan vecinos</small></span></a>
+      <nav aria-label="Navegación principal">
+        <button id="top-add" class="button subtle">+ Donar un libro</button>
+        <button id="top-admin" class="button textbutton">Administración</button>
+      </nav>
+    </header>
+    <main>
+      <section class="hero" aria-labelledby="welcome">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="dot"></span> NUESTRA BIBLIOTECA COMUNITARIA</div>
+          <h1 id="welcome">Un libro compartido.<br><em>Mil historias nuevas.</em></h1>
+          <p>Busca tu próxima lectura, llévatela a casa y devuélvela cuando termines. Así de fácil, entre vecinos.</p>
+          <div class="hero-buttons">
+            <a class="button primary" href="#catalogo">Explorar libros <span aria-hidden="true">↗</span></a>
+            <button id="hero-add" class="button light">Tengo un libro para donar</button>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true"><div class="circle"></div><div class="book book-one"><span>✦</span></div><div class="book book-two"><span>⟡</span></div><div class="book book-three"><span>❋</span></div><div class="hero-quote">Leer es compartir<br>otros mundos.</div></div>
+      </section>
+      <section class="stats" aria-label="Estadísticas de la biblioteca">
+        <div><strong id="count-all">—</strong><span>Libros en la biblioteca</span></div>
+        <div><strong id="count-free">—</strong><span>Disponibles ahora</span></div>
+        <div><strong id="count-borrowed">—</strong><span>Prestados entre vecinos</span></div>
+      </section>
+      <section id="catalogo" class="catalogue">
+        <div class="catalogue-head"><div><span class="eyebrow">ENCUENTRA TU PRÓXIMA HISTORIA</span><h2>Nuestros libros</h2></div><button id="inline-add" class="button outline">+ Añadir libro</button></div>
+        <div class="tools"><label class="searchbox"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar por título, autor, género..." aria-label="Buscar libros"></label><label class="filterbox"><span>Mostrar</span><select id="filter"><option value="all">Todos los libros</option><option value="available">Disponibles</option><option value="infantil">Infantiles</option><option value="juvenil">Juveniles</option><option value="adultos">Adultos</option></select></label></div>
+        <div id="notice" role="status" aria-live="polite"></div>
+        <div id="books" class="books-grid" aria-live="polite"></div>
+      </section>
+    </main>
+    <footer><span>Biblioteca TDT · Hecha para compartir</span><span>No necesitas registrarte · Devolución recomendada en 30 días</span></footer>
+  </div>
+  <dialog id="modal" aria-label="Detalle y gestiones de biblioteca"><div id="modal-content"></div></dialog>
+</body>
+</html>
