@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "wrangler pages dev public",
+    "deploy": "wrangler pages deploy public",
     "db:local": "wrangler d1 execute biblioteca-tdt --local --file=./schema.sql",
     "db:remote": "wrangler d1 execute biblioteca-tdt --remote --file=./schema.sql",
     "test": "node --test tests/*.test.js",
-    "check": "node --check src/worker.js && node --check src/core.js && node --check public/app.js"
+    "check": "node --check src/worker.js && node --check src/core.js && node --check public/app.js && node --check 'functions/api/[[path]].js'"
   },
   "devDependencies": {
     "wrangler": "^4.43.0"
