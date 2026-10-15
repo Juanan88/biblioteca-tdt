@@ -2,7 +2,7 @@
 // Nunca inventamos una edad exacta; es preferible dejar el campo vacío.
 export function shortDescription(value) {
   const raw = typeof value === "string" ? value : (value && typeof value.value === "string" ? value.value : "");
-  return raw.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,1500);
+  return raw.replace(/<[^>]*>/g," ").replace(/\s+/g," ").replace(/\s+([.,;!?])/g,"$1").trim().slice(0,1500);
 }
 export function trustedBookCover(value) {
   if (typeof value !== "string" || !value) return "";
