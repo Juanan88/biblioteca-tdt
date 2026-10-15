@@ -1,6 +1,7 @@
 import { text, isbn, bookInput, aliasInput } from "./core.js";
 import { fromLegacy, fromEdition, fromWork, fromGoogle, mergeBookData } from "./metadata.js";
 import { ensureHistory } from "./history.js";
+import { ensureDonorColumn } from "./donor.js";
 
 function reply(data, status = 200, extra = {}) {
   return Response.json(data, {status, headers:{
@@ -76,7 +77,7 @@ async function log(db,id,action) {
   try { await db.prepare("INSERT INTO events(book_id,action) VALUES (?,?)").bind(id,action).run(); }
   catch { /* Una caída del log no invalida un préstamo ya confirmado. */ }
 }
-const bookSelect="SELECT id,isbn,title,author,description,cover_url,genre,audience,min_age,condition,status,borrower_alias,borrowed_at,created_at,updated_at FROM books";
+const bookSelect="SELECT id,isbn,title,author,description,cover_url,genre,audience,min_age,condition,donor_name,status,borrower_alias,borrowed_at,created_at,updated_at FROM books";
 
 async function fetchBookJson(url, ms=4800) {
   const controller=new AbortController();
@@ -120,6 +121,7 @@ export default {
   if (!path.startsWith("/api/")) return env.ASSETS.fetch(request);
   if (!env.DB) return fail("Falta configurar la base de datos D1.",503);
   try {
+    await ensureDonorColumn(env.DB);
     if (!["GET","HEAD"].includes(method)) {
       if (!sameOrigin(request)) return fail("Origen de solicitud no permitido.",403);
       if (!isConfigured(env)) return fail("Falta configurar los secretos en Cloudflare Pages (Production). Comprueba ADMIN_PASSWORD (mínimo 16 caracteres) y ADMIN_SESSION_SECRET (mínimo 32); guarda ambos como Secret y vuelve a desplegar.",503);
@@ -142,8 +144,8 @@ export default {
       const input=bookInput(await bodyOf(request));
       const id=crypto.randomUUID();
       await env.DB.prepare(
-       "INSERT INTO books(id,isbn,title,author,description,cover_url,genre,audience,min_age,condition) VALUES(?,?,?,?,?,?,?,?,?,?)"
-      ).bind(id,input.isbn,input.title,input.author,input.description,input.cover_url,input.genre,input.audience,input.min_age,input.condition).run();
+       "INSERT INTO books(id,isbn,title,author,description,cover_url,genre,audience,min_age,condition,donor_name) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+      ).bind(id,input.isbn,input.title,input.author,input.description,input.cover_url,input.genre,input.audience,input.min_age,input.condition,input.donor_name).run();
       await log(env.DB,id,"alta");
       return reply({ok:true,id},201);
     }
@@ -152,8 +154,8 @@ export default {
       await ensureHistory(env.DB);
       if(!await rateLimit(request,env,"edit",45)) return fail("Demasiadas modificaciones.",429);
       const input=bookInput(await bodyOf(request));
-      const result=await env.DB.prepare("UPDATE books SET isbn=?,title=?,author=?,description=?,cover_url=?,genre=?,audience=?,min_age=?,condition=?,updated_at=datetime('now') WHERE id=? AND removed_at IS NULL")
-       .bind(input.isbn,input.title,input.author,input.description,input.cover_url,input.genre,input.audience,input.min_age,input.condition,match[1]).run();
+      const result=await env.DB.prepare("UPDATE books SET isbn=?,title=?,author=?,description=?,cover_url=?,genre=?,audience=?,min_age=?,condition=?,donor_name=?,updated_at=datetime('now') WHERE id=? AND removed_at IS NULL")
+       .bind(input.isbn,input.title,input.author,input.description,input.cover_url,input.genre,input.audience,input.min_age,input.condition,input.donor_name,match[1]).run();
       if(!result.meta.changes) return fail("No encontramos el libro.",404);
       await log(env.DB,match[1],"edicion");
       return reply({ok:true});
@@ -232,8 +234,8 @@ export default {
           if(borrowed && (typeof original.borrower_alias!=="string"||!original.borrower_alias.trim()||typeof original.borrowed_at!=="string"))return fail("Hay un préstamo incompleto en la copia.");
           const date=(x)=>typeof x==="string" && /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/.test(x) ? x : null;
           statements.push(env.DB.prepare(
-           "INSERT OR IGNORE INTO books(id,isbn,title,author,description,cover_url,genre,audience,min_age,condition,status,borrower_alias,borrowed_at,created_at,updated_at,removed_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
-          ).bind(original.id,b.isbn,b.title,b.author,b.description,b.cover_url,b.genre,b.audience,b.min_age,b.condition,original.status,
+           "INSERT OR IGNORE INTO books(id,isbn,title,author,description,cover_url,genre,audience,min_age,condition,donor_name,status,borrower_alias,borrowed_at,created_at,updated_at,removed_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+          ).bind(original.id,b.isbn,b.title,b.author,b.description,b.cover_url,b.genre,b.audience,b.min_age,b.condition,b.donor_name,original.status,
            borrowed?original.borrower_alias:null,borrowed?date(original.borrowed_at):null,
            date(original.created_at)||new Date().toISOString().slice(0,19).replace("T"," "),
            date(original.updated_at)||new Date().toISOString().slice(0,19).replace("T"," "),date(original.removed_at)));
@@ -260,11 +262,13 @@ export default {
         await ensureHistory(env.DB);
         const row=await env.DB.prepare("SELECT book_id,before_json FROM book_revisions WHERE id=?").bind(Number(revisionRestore[1])).first();
         if(!row)return fail("Versión no encontrada.",404);
-        const old=bookInput(JSON.parse(row.before_json));
+        const previous=JSON.parse(row.before_json);
+        const old=bookInput(previous);
+        const donorFromRevision=Object.prototype.hasOwnProperty.call(previous,"donor_name")?old.donor_name:null;
         // Solo metadatos: nunca alterar un préstamo actual ni resucitar libros retirados.
         const result=await env.DB.prepare(
-          "UPDATE books SET isbn=?,title=?,author=?,description=?,cover_url=?,genre=?,audience=?,min_age=?,condition=?,updated_at=datetime('now') WHERE id=? AND removed_at IS NULL"
-        ).bind(old.isbn,old.title,old.author,old.description,old.cover_url,old.genre,old.audience,old.min_age,old.condition,row.book_id).run();
+          "UPDATE books SET isbn=?,title=?,author=?,description=?,cover_url=?,genre=?,audience=?,min_age=?,condition=?,donor_name=COALESCE(?,donor_name),updated_at=datetime('now') WHERE id=? AND removed_at IS NULL"
+        ).bind(old.isbn,old.title,old.author,old.description,old.cover_url,old.genre,old.audience,old.min_age,old.condition,donorFromRevision,row.book_id).run();
         if(!result.meta.changes)return fail("El libro está retirado o ya no existe.",409);
         await log(env.DB,row.book_id,"restaurar_ficha");
         return reply({ok:true});
@@ -285,7 +289,7 @@ export default {
     }
     return fail("Ruta no encontrada.",404);
   } catch(err) {
-    if(err instanceof Error && (/^Introduce|^El ISBN|^Datos no|^La edad|^Envía|^JSON no|^La solicitud|^El autor|^La sinopsis|^El género|^La categoría|^La conservación|^La dirección|^La portada|^Estado de un libro|^Hay un préstamo|^Identificador de libro/.test(err.message))) return fail(err.message);
+    if(err instanceof Error && (/^Introduce|^El ISBN|^Datos no|^La edad|^Envía|^JSON no|^La solicitud|^El autor|^La sinopsis|^El género|^La categoría|^La conservación|^La dirección|^La portada|^El donante|^Pon solo un nombre|^Estado de un libro|^Hay un préstamo|^Identificador de libro/.test(err.message))) return fail(err.message);
     console.error("Biblioteca API error:",err);
     return fail("No hemos podido completar la operación. Inténtalo de nuevo.",500);
   }
