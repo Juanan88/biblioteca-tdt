@@ -1,5 +1,7 @@
 # Biblioteca TDT
 
+> **Actualización catálogo (15/10/2026):** se han eliminado los filtros por edades/categorías y ahora queda **un único interruptor «Solo disponibles»**. Se puede alternar entre vista de **Tarjetas** y **Lista**; la preferencia se guarda en este navegador. Las fichas muestran la **portada real procedente de catálogos bibliográficos** cuando está disponible (primero `cover_url`, o por ISBN a través de Open Library); si no hay imagen, aparece una cubierta ilustrativa de sustitución. Los tres libros de demostración intentan mostrar sus portadas por ISBN, siguen siendo solo ejemplos visuales y **no se insertan en D1**.
+
 > **Actualización UX (15/10/2026):** Se ha reducido a **un único botón «+ Donar un libro»** en la cabecera, eliminado los filtros duplicados y simplificado el formulario de donación. Mientras no existan libros reales, el catálogo muestra **tres libros de ejemplo señalados claramente como «EJEMPLO»**, con portadas ilustrativas creadas con CSS. No se guardan en D1 y desaparecen con el primer libro real. Consulta [AUDITORIA_UX.md](./AUDITORIA_UX.md).
 
 Biblioteca vecinal colaborativa. **Sin registro de usuarios, sin QR individuales y con coste obligatorio de 0 €**. Proyecto completamente independiente de Hoy Toca Plan.
@@ -25,8 +27,8 @@ El código original se había preparado para Workers; por ello, se ha adaptado *
 
 ## Funciones previstas para vecinos
 
-- Catálogo responsive con título, autor, portada, categoría y disponibilidad.
-- Búsqueda y filtros.
+- Catálogo responsive con título, autor, **portada real si existe**, categoría y disponibilidad; cubierta ilustrativa si no hay foto.
+- Búsqueda por título/autor y un único filtro opcional **Solo disponibles**. Alternancia **Tarjetas / Lista**, con preferencia recordada en este navegador.
 - Alta rápida por ISBN (incluyendo cámara si el navegador la admite) y alternativa por título.
 - Préstamo con nombre de pila/alias visible y fecha: «Me lo llevo».
 - Devolución con un botón: «Lo he devuelto».
