@@ -65,3 +65,23 @@ test("el donante se muestra en tarjetas y puede omitirse en el formulario",()=>{
  assert.match(js,/donor_name:data\.donor_name/);
  assert.match(css,/\.donor-label/);
 });
+
+
+test("fase 1: el catálogo llega después de una sola portada breve, sin estadísticas bloqueando la entrada",()=>{
+ const startHero=html.indexOf('class="hero hero--compact"');
+ const startCatalog=html.indexOf('id="catalogo"');
+ const stats=html.indexOf('class="stats stats-inline"');
+ const books=html.indexOf('id="books"');
+ assert.ok(startHero!==-1&&startCatalog>startHero&&stats>startCatalog&&books>stats);
+ assert.equal((html.match(/id="count-(?:all|free|borrowed)"/g)||[]).length,3);
+ assert.equal((html.match(/id="catalogo"/g)||[]).length,1);
+ assert.doesNotMatch(html,/class="hero-buttons"/,"evita añadir una segunda CTA antes de libros");
+ assert.match(html,/class="catalogue catalogue--focused"/);
+});
+test("fase 1: las estadísticas son compactas y la portada se acorta para móvil",()=>{
+ assert.match(css,/\.hero\.hero--compact\s*\{[^}]*min-height:0/s);
+ assert.match(css,/\.catalogue--focused \.stats\.stats-inline/);
+ assert.match(css,/\.catalogue--focused \.searchbox:focus-within/);
+ assert.match(css,/@media\(max-width:690px\)\s*\{[\s\S]*?\.hero--compact \.hero-copy\{padding:21px 20px 22px\}/);
+ assert.match(css,/\.catalogue--focused \.catalog-controls\{margin:9px 0 15px\}/);
+});
