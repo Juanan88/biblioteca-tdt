@@ -63,6 +63,7 @@ function regroup(){
 }
 function render(){
   regroup();
+  $("#books").classList.toggle("demo-mode",state.books.length===0);
   document.querySelectorAll(".quick-filters button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.filter===state.filter)));
   $("#count-all").textContent=state.books.length;
   $("#count-free").textContent=state.books.filter(b=>b.status==="available").length;
@@ -114,7 +115,6 @@ function detail(key){
   for(const b of borrowed){
     extra+='<div class="copy-row"><div class="meta"><strong>Prestado a '+escapeHtml(b.borrower_alias||"un vecino")+'</strong><small>Desde el '+escapeHtml(shortDate(b.borrowed_at))+
     (due(b.borrowed_at)?" · Devolución recomendada":"")+'</small></div>'+btn("Lo he devuelto","return",b.id,"outline")+'</div>';
-    extra+='<div class="actions">'+btn("Está en la estantería","found",b.id,"subtle")+'</div>';
   }
   for(const b of review){
     extra+='<div class="copy-row"><div class="meta"><strong>Por comprobar</strong><small>Un vecino no lo encontró en la estantería</small></div>'+btn("Está en la estantería","found",b.id,"outline")+'</div>';
