@@ -16,8 +16,7 @@
     <header class="site-header">
       <a class="brand" href="/" aria-label="Biblioteca TDT, inicio"><span class="brand-symbol">▤</span><span>Biblioteca <strong>TDT</strong><small>Pequeñas y grandes aventuras</small></span></a>
       <nav aria-label="Navegación principal">
-        <button id="top-add" class="button subtle">+ Donar un libro</button>
-        <button id="top-admin" class="button textbutton">Administración</button>
+        <button id="top-add" class="button primary">+ Donar un libro</button>
       </nav>
     </header>
     <main>
@@ -28,7 +27,6 @@
           <p>Cuentos, animales, dinosaurios y mundos de fantasía. Descubre los libros de nuestros vecinos, llévate uno a casa y compártelo al terminar.</p>
           <div class="hero-buttons">
             <a class="button primary" href="#catalogo">Descubrir cuentos <span aria-hidden="true">↗</span></a>
-            <button id="hero-add" class="button light">Quiero donar un libro</button>
           </div>
         </div>
         <div class="hero-art" aria-hidden="true"><div class="circle"></div><div class="sparkle sparkle-a">✦</div><div class="sparkle sparkle-b">★</div><div class="sparkle sparkle-c">✳</div><div class="book book-one"><span>✦</span></div><div class="book book-two"><span>⟡</span></div><div class="book book-three"><span>❋</span></div><div class="hero-quote">¡Cada libro es<br>una aventura!</div></div>
@@ -39,13 +37,13 @@
         <div><strong id="count-borrowed">—</strong><span>Prestados entre vecinos</span></div>
       </section>
       <section id="catalogo" class="catalogue">
-        <div class="catalogue-head"><div><span class="eyebrow">ELIGE TU PRÓXIMA AVENTURA</span><h2>Un mundo de historias 📚</h2></div><button id="inline-add" class="button outline">+ Añadir libro</button></div>
-        <div class="tools"><label class="searchbox"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar por título, autor, género..." aria-label="Buscar libros"></label><label class="filterbox"><span>Mostrar</span><select id="filter"><option value="all">Todos los libros</option><option value="available">Disponibles</option><option value="infantil">Infantiles</option><option value="juvenil">Juveniles</option><option value="adultos">Adultos</option></select></label></div>
-        <div class="quick-filters" role="group" aria-label="Búsquedas rápidas"><button type="button" data-action="quick-filter" data-filter="infantil">🧸 Infantiles</button><button type="button" data-action="quick-filter" data-filter="juvenil">✨ Juveniles</button><button type="button" data-action="quick-filter" data-filter="available">📗 Disponibles</button><button type="button" data-action="quick-filter" data-filter="all">Todos los libros</button></div><div id="notice" role="status" aria-live="polite"></div>
+        <div class="catalogue-head"><div><span class="eyebrow">ELIGE TU PRÓXIMA AVENTURA</span><h2>Un mundo de historias 📚</h2></div></div>
+        <div class="tools"><label class="searchbox"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar por título, autor, género..." aria-label="Buscar libros"></label></div>
+        <div class="quick-filters" role="group" aria-label="Búsquedas rápidas"><button type="button" data-action="quick-filter" data-filter="infantil">🧸 Infantiles</button><button type="button" data-action="quick-filter" data-filter="juvenil">✨ Juveniles</button><button type="button" data-action="quick-filter" data-filter="adultos">📖 Adultos</button><button type="button" data-action="quick-filter" data-filter="available">📗 Disponibles</button><button type="button" data-action="quick-filter" data-filter="all">Todos los libros</button></div><div id="notice" role="status" aria-live="polite"></div>
         <div id="books" class="books-grid" aria-live="polite"></div>
       </section>
     </main>
-    <footer><span>Biblioteca TDT · ¡Historias que viajan de casa en casa!</span><span>No necesitas registrarte · Devolución recomendada en 30 días</span></footer>
+    <footer><span>Biblioteca TDT · ¡Historias que viajan de casa en casa!</span><span>No necesitas registrarte · Devolución recomendada en 30 días · <button id="top-admin" class="footer-admin">Administración</button></span></footer>
   </div>
   <dialog id="modal" aria-label="Detalle y gestiones de biblioteca"><div id="modal-content"></div></dialog>
 </body>
