@@ -1,4 +1,5 @@
 import { text, isbn, bookInput, aliasInput } from "./core.js";
+import { fromLegacy, fromEdition, fromWork, fromGoogle, mergeBookData } from "./metadata.js";
 
 function reply(data, status = 200, extra = {}) {
   return Response.json(data, {status, headers:{
@@ -69,23 +70,38 @@ async function log(db,id,action) {
 }
 const bookSelect="SELECT id,isbn,title,author,description,cover_url,genre,audience,min_age,condition,status,borrower_alias,borrowed_at,created_at,updated_at FROM books";
 
-async function lookupIsbn(code) {
-  // Open Library es gratuito; puede carecer de ciertos libros o metadatos.
-  const url="https://openlibrary.org/api/books?bibkeys=ISBN:"+encodeURIComponent(code)+"&format=json&jscmd=data";
+async function fetchBookJson(url, ms=4800) {
   const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),5500);
+  const timer=setTimeout(()=>controller.abort(),ms);
   try {
     const response=await fetch(url,{signal:controller.signal,headers:{Accept:"application/json"}});
-    if(!response.ok) return null;
-    const data=await response.json();
-    const item=data["ISBN:"+code];
-    if(!item || !item.title) return null;
-    const cover=item.cover?.medium || item.cover?.small || null;
-    const urlCover=typeof cover==="string" && cover.startsWith("https://covers.openlibrary.org/") ? cover : null;
-    return {isbn:code,title:item.title,author:(item.authors||[]).map(a=>a.name).filter(Boolean).join(", ")||"",
-      description:typeof item.notes==="string" ? item.notes : "",
-      cover_url:urlCover, genre:(item.subjects||[])[0]?.name || "", audience:"", min_age:""};
-  } finally {clearTimeout(timeout);}
+    if(!response.ok)return null;
+    return await response.json();
+  } catch {return null;}
+  finally{clearTimeout(timer);}
+}
+async function lookupIsbn(code) {
+  // Edición y obra de Open Library, con Google Books como complemento gratuito.
+  const [raw, edition]=await Promise.all([
+    fetchBookJson("https://openlibrary.org/api/books?bibkeys=ISBN:"+encodeURIComponent(code)+"&format=json&jscmd=data"),
+    fetchBookJson("https://openlibrary.org/isbn/"+encodeURIComponent(code)+".json")
+  ]);
+  const legacy=fromLegacy(raw?.["ISBN:"+code],code);
+  const specific=fromEdition(edition,code);
+  const workRef=edition?.works?.[0]?.key;
+  const safeWork=typeof workRef==="string" && /^\/works\/OL\d+W$/.test(workRef) ? workRef : null;
+  const combined=mergeBookData([legacy,specific],code);
+  const needsDetail=!combined?.description || !combined?.cover_url || !combined?.genre || !combined?.audience;
+  let work=null,google=null;
+  if(needsDetail) {
+    const [workJson, googleJson]=await Promise.all([
+      safeWork ? fetchBookJson("https://openlibrary.org"+safeWork+".json") : Promise.resolve(null),
+      fetchBookJson("https://www.googleapis.com/books/v1/volumes?q="+encodeURIComponent("isbn:"+code)+"&maxResults=4",4800)
+    ]);
+    work=fromWork(workJson,code);
+    google=fromGoogle(googleJson?.items||[],code);
+  }
+  return mergeBookData([legacy,specific,work,google],code);
 }
 const idRegex=/^\/api\/books\/([0-9a-f-]{36})(?:\/(borrow|return|missing|found))?$/;
 const adminBookRegex=/^\/api\/admin\/books\/([0-9a-f-]{36})\/(remove|restore)$/;
@@ -98,7 +114,7 @@ export default {
   try {
     if (!["GET","HEAD"].includes(method)) {
       if (!sameOrigin(request)) return fail("Origen de solicitud no permitido.",403);
-      if (!isConfigured(env)) return fail("Falta configurar los secretos de la aplicación.",503);
+      if (!isConfigured(env)) return fail("Falta configurar los secretos en Cloudflare Pages (Production). Comprueba ADMIN_PASSWORD (mínimo 16 caracteres) y ADMIN_SESSION_SECRET (mínimo 32); guarda ambos como Secret y vuelve a desplegar.",503);
     }
     if(method==="GET" && path==="/api/health") return reply({ok:true,configured:isConfigured(env)});
     if(method==="GET" && path==="/api/books") {
