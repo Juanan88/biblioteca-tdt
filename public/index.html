@@ -39,7 +39,24 @@
       <section id="catalogo" class="catalogue">
         <div class="catalogue-head"><div><span class="eyebrow">ELIGE TU PRÓXIMA AVENTURA</span><h2>Un mundo de historias 📚</h2></div></div>
         <div class="tools"><label class="searchbox"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar por título, autor, género..." aria-label="Buscar libros"></label></div>
-        <div class="quick-filters" role="group" aria-label="Búsquedas rápidas"><button type="button" data-action="quick-filter" data-filter="infantil">🧸 Infantiles</button><button type="button" data-action="quick-filter" data-filter="juvenil">✨ Juveniles</button><button type="button" data-action="quick-filter" data-filter="adultos">📖 Adultos</button><button type="button" data-action="quick-filter" data-filter="available">📗 Disponibles</button><button type="button" data-action="quick-filter" data-filter="all">Todos los libros</button></div><div id="notice" role="status" aria-live="polite"></div>
+        <div class="catalog-controls">
+          <label class="available-toggle" for="only-available">
+            <input type="checkbox" id="only-available">
+            <span class="toggle-track" aria-hidden="true"></span>
+            <span>Solo disponibles</span>
+          </label>
+          <div class="view-switch" role="group" aria-label="Vista del catálogo">
+            <button type="button" id="view-cards" class="view-choice" data-action="view-mode" data-view="cards" aria-pressed="true" title="Vista de tarjetas">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>
+              <span>Tarjetas</span>
+            </button>
+            <button type="button" id="view-list" class="view-choice" data-action="view-mode" data-view="list" aria-pressed="false" title="Vista de lista">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><rect x="3" y="4.5" width="3" height="3" rx=".5"/><rect x="3" y="10.5" width="3" height="3" rx=".5"/><rect x="3" y="16.5" width="3" height="3" rx=".5"/></svg>
+              <span>Lista</span>
+            </button>
+          </div>
+        </div>
+        <div id="notice" role="status" aria-live="polite"></div>
         <div id="books" class="books-grid" aria-live="polite"></div>
       </section>
     </main>
