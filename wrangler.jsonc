@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "biblioteca-tdt",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-30",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "biblioteca-tdt",
+      "database_id": "REEMPLAZAR_CON_ID_DE_D1"
+    }
+  ]
+}
