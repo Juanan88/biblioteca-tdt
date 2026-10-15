@@ -64,7 +64,7 @@ function render(){
   $("#books").innerHTML=groups.map(([key,items])=>{
     const book=items[0],available=items.filter(b=>b.status==="available").length,borrowed=items.filter(b=>b.status==="borrowed").length;
     const status=available ? "available" : borrowed ? "borrowed" : "review";
-    const cover=book.cover_url ? '<img src="'+escapeHtml(book.cover_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='+"'"+"none"+"'" + '">'
+    const cover=book.cover_url ? '<img src="'+escapeHtml(book.cover_url)+'" alt="" loading="lazy" referrerpolicy="no-referrer">'
       : '<div class="cover-placeholder" aria-hidden="true">✦</div>';
     return '<button class="book-card" data-action="view" data-key="'+escapeHtml(encodeURIComponent(key))+'" aria-label="Ver '+escapeHtml(book.title)+'">'+
       '<div class="cover-area">'+cover+'</div><div class="book-info">'+pill(status)+
