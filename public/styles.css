@@ -192,3 +192,39 @@ dialog .dialog-top h2{font-family:"Trebuchet MS",Georgia,serif;font-weight:700}
  .books-grid.list-mode .sample-card .demo-cover-symbol{font-size:23px}
  .detail-cover{height:131px;width:91px}
 }
+
+
+/* Formularios: mensajes accesibles y portada editable. */
+.form-error{background:#fff2e9;border:1px solid #e9b5a2;border-left:4px solid #b65340;color:#943c2d;border-radius:8px;padding:12px 14px;line-height:1.4;font-size:14px;margin:10px 0 14px}
+.form-error:empty{display:none}
+.book-extras input[type="url"]{min-width:0;width:100%;font-size:13px;overflow-wrap:anywhere}
+.admin-tools{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 14px}
+.backup-restore{border:1px solid #dfece1;background:#f7fbf6;padding:13px;border-radius:12px;display:grid;gap:9px;margin:15px 0}
+.backup-restore label{font-weight:700;font-size:13px}
+.backup-restore input[type="file"]{font:inherit;font-size:12px;max-width:100%;min-width:0}
+.backup-restore .button{justify-self:start}
+.admin-row{gap:10px}
+.admin-row .actions{flex-wrap:wrap}
+.admin-row .button{white-space:nowrap}
+.dialog-body{line-height:1.55}
+.book-card:focus-visible,.view-choice:focus-visible{outline:3px solid #bd724c;outline-offset:3px}
+@media(max-width:690px){
+ .admin-tools{flex-direction:column}
+ .admin-tools .button{width:100%;justify-content:center}
+ .admin-row{gap:8px;flex-wrap:wrap}
+ .admin-row span{min-width:140px;max-width:100%;flex:1}
+ .admin-row .button{font-size:12px;padding:8px 11px}
+ .dialog-top h2{font-size:clamp(21px,6vw,29px)}
+ #modal-content{padding:19px 17px 22px}
+ .row-fields{flex-direction:column;gap:7px}
+ .row-fields .field{min-width:0;width:100%}
+ .book-extras{padding:0 12px}
+ .book-extras summary{font-size:14px;line-height:1.4}
+ .book-cover-preview{gap:8px}
+ .book-cover-preview img{width:65px;max-height:86px}
+ .age-tag{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ .book-card,.button,.view-choice,.quick-filters button,.toggle-track{transition:none!important}
+ html{scroll-behavior:auto}
+}
