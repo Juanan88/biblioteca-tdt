@@ -1,5 +1,7 @@
 # Biblioteca TDT
 
+> **Donaciones con nombre (15/10/2026):** al donar se puede escribir opcionalmente **nombre o apodo del donante** (máximo 40 caracteres). Si queda vacío, la ficha mostrará **«Donado por Anónimo»**. Se ve en tarjetas, lista y detalle; en títulos con varios ejemplares se indican sus donantes. El nombre es visible para cualquiera que conozca el enlace, así que no escribas apellidos ni datos personales. Los libros antiguos reciben **«Anónimo»** mediante migración automática y no destructiva. El historial y las copias de seguridad también incluyen este campo. No hay servicios de pago nuevos.
+
 > **Actualización de seguridad y UX (15/10/2026):**
 > - Préstamos protegidos contra peticiones simultáneas; «Está en la estantería» solo puede recuperar libros en estado **Por comprobar**.
 > - Retirar/restaurar un libro **no borra el alias ni la fecha de un préstamo activo**.
@@ -39,7 +41,7 @@ El código original fue adaptado a **Cloudflare Pages Functions** y la base D1 y
 
 - Catálogo responsive con título, autor, **portada real si existe**, categoría y disponibilidad; cubierta ilustrativa si no hay foto.
 - Búsqueda por título/autor y un único filtro opcional **Solo disponibles**. Alternancia **Tarjetas / Lista**, con preferencia recordada en este navegador.
-- Alta rápida por ISBN (incluyendo cámara si el navegador la admite) y alternativa por título.
+- Alta rápida por ISBN (incluyendo cámara si el navegador la admite) y alternativa por título. Nombre/apodo del donante opcional (Anónimo por defecto).
 - Préstamo con nombre de pila/alias visible y fecha: «Me lo llevo».
 - Devolución con un botón: «Lo he devuelto».
 - Aviso de devolución recomendada tras 30 días, sin multas ni bloqueos.
@@ -106,6 +108,7 @@ Para desplegar manualmente con el CLI desde una sesión autenticada (no obligato
 - `tests/api.test.js`: pruebas de integración con SQLite en memoria, incluidos cambios simultáneos.
 - `.github/workflows/test.yml`: ejecución automática de Node 24 en cada commit.
 - `src/history.js` y `migrations/001_book_revisions.sql`: historial recuperable y migración no destructiva.
+- `src/donor.js` y `migrations/002_donor.sql`: donante Anónimo por defecto para libros ya existentes, sin borrar datos; la migración se realiza automáticamente cuando llega la primera solicitud tras publicar.
 - `BACKUPS.md`: guía de copias, restauración de datos y Time Travel en plan Free.
 - `ESPECIFICACION.md`: ocho decisiones aprobadas por el usuario.
 - `AGENTS.md`: instrucciones para seguir el desarrollo.
