@@ -85,3 +85,12 @@ test("fase 1: las estadísticas son compactas y la portada se acorta para móvil
  assert.match(css,/@media\(max-width:690px\)\s*\{[\s\S]*?\.hero--compact \.hero-copy\{padding:21px 20px 22px\}/);
  assert.match(css,/\.catalogue--focused \.catalog-controls\{margin:9px 0 15px\}/);
 });
+
+test("donar un libro no requiere una casilla de confirmación redundante",()=>{
+ const form=js.slice(js.indexOf("function bookForm("),js.indexOf("function checkDuplicate("));
+ assert.ok(form.includes("Añade el libro cuando ya lo hayas dejado en la estantería"));
+ assert.ok(form.includes("Confirmar donación"));
+ assert.doesNotMatch(form,/type="checkbox"/);
+ assert.ok(form.includes("id=\"duplicate\""),"el aviso de ISBN duplicado se mantiene");
+ assert.ok(form.includes("id=\"title\""),"el título sigue siendo obligatorio");
+});
