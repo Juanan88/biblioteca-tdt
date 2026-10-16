@@ -174,7 +174,7 @@ function bookForm(book=null){
   const editing=!!book;
   const val=(name)=>escapeHtml(book?.[name] ?? "");
   show(heading(editing?"Corregir ficha":"Donar un libro",
-    '<p class="dialog-body">'+(editing?"Puedes corregir los datos del catálogo. Los préstamos no cambian.":"Solo es necesario identificar el libro y confirmar que ya está en la biblioteca.")+'</p>'+
+    '<p class="dialog-body">'+(editing?"Puedes corregir los datos del catálogo. Los préstamos no cambian.":"Añade los datos del libro que has dejado en la estantería. Los demás vecinos podrán encontrarlo en el catálogo.")+'</p>'+
     '<form id="book-form" '+(editing?'data-edit="'+escapeHtml(book.id)+'"':"")+'>'+
     '<div class="field"><label for="isbn">ISBN (opcional)</label><div class="actions" style="margin:0"><input id="isbn" name="isbn" inputmode="numeric" placeholder="ISBN del libro" value="'+val("isbn")+'" style="flex:1;min-width:140px"><button type="button" class="button outline" data-action="lookup">Buscar datos</button><button type="button" class="button outline" data-action="scan">📷 Escanear</button></div><span id="isbn-message" class="tiny">También puedes escribir el título directamente.</span></div>'+
     '<div id="camera-region"></div><div id="cover-preview" aria-live="polite"></div>'+
@@ -186,8 +186,8 @@ function bookForm(book=null){
     '<div class="row-fields"><div class="field"><label for="genre">Género</label><input name="genre" id="genre" maxlength="60" value="'+val("genre")+'"></div><div class="field"><label for="condition">Conservación</label><select name="condition" id="condition"><option value="">Sin especificar</option>'+["nuevo","bueno","aceptable","deteriorado"].map(a=>'<option value="'+a+'" '+(book?.condition===a?"selected":"")+'>'+a[0].toUpperCase()+a.slice(1)+'</option>').join("")+'</select></div></div>'+
     '<div class="field"><label for="description">Sinopsis (opcional)</label><textarea id="description" maxlength="1500" name="description">'+escapeHtml(book?.description||"")+'</textarea></div>'+
     '<div class="field"><label for="cover_url">Portada (URL de Open Library o Google Books)</label><input type="url" id="cover_url" name="cover_url" maxlength="600" placeholder="Opcional: https://covers.openlibrary.org/..." value="'+val("cover_url")+'"><p class="tiny">Si la portada recuperada no coincide, puedes corregir el enlace o dejarlo vacío.</p></div></details>'+
-    (editing?'':'<label class="dialog-body" style="display:flex;align-items:center;gap:10px"><input type="checkbox" required style="width:18px;height:18px"> Confirmo que ya he dejado este libro en la biblioteca.</label><p id="duplicate" class="notice" hidden></p>')+
-    '<div class="actions"><button class="button primary" type="submit">'+(editing?"Guardar cambios":"Añadir a la biblioteca")+'</button></div></form>'));
+    (editing?'':'<p class="info-note donation-hint">📚 Añade el libro cuando ya lo hayas dejado en la estantería, para que otros vecinos puedan encontrarlo.</p><p id="duplicate" class="notice" hidden></p>')+
+    '<div class="actions"><button class="button primary" type="submit">'+(editing?"Guardar cambios":"Confirmar donación")+'</button></div></form>'));
   if(!editing){
     let isbnTimer=null;
     $("#isbn").addEventListener("input",()=>{
